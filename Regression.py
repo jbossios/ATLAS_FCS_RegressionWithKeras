@@ -27,6 +27,7 @@ from tensorflow.keras.layers.experimental import preprocessing
 InputDataType  = 'Real' # Options: Example, Real
 ActivationType = 'relu' # Options: relu, tanh, linear, LeakyRelu
 Nepochs        = 200
+LearningRate   = 0.001
 
 ##################################################################
 # DO NOT MODIFY (below this line)
@@ -104,7 +105,7 @@ model.summary()
 # Compile model
 print('INFO: Compile model')
 model.compile(
-    optimizer=tf.optimizers.Adam(learning_rate=0.1),
+    optimizer=tf.optimizers.Adam(learning_rate=LearningRate),
     loss='mean_absolute_error',
     metrics=['MeanSquaredError']) # Computes the mean squared error between y_true and y_pred
 
