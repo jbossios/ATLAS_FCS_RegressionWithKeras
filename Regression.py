@@ -33,21 +33,34 @@ LearningRate   = 0.001
 # DO NOT MODIFY (below this line)
 ##################################################################
 
-OutBaseName = '{}_{}'.format(InputDataType,ActivationType)
+class Config:
+  def __init__(self,datatype,activation,epochs,lr):
+    self.InputDataType  = datatype
+    self.ActivationType = activation
+    self.Nepochs        = epochs
+    self.LearningRate   = lr
+
+# Print chosen setup
+config = Config(InputDataType,ActivationType,Nepochs,LearningRate)
+print('###################################################################################')
+print('INFO: Setup:')
+print(vars(config))
+print('###################################################################################')
+
+OutBaseName = '{}_{}'.format(config.InputDataType,config.ActivationType)
 
 # Get data
 print('INFO: Get data')
-if InputDataType == 'Example':
+if config.InputDataType == 'Example':
   header    = ['x','x+2','y']
   features  = ['x','x+2']
   labels    = ['y']
   InputFile = 'TestData.csv'
-elif InputDataType == 'Real':
+elif config.InputDataType == 'Real':
   Layers    = [0,1,2,3,12]
   header    = ['e_{}'.format(x) for x in Layers]
   features  = header
-  #labels    = ['extrapWeight_{}'.format(x) for x in Layers] # Temporary
-  labels    = ['extrapWeight_0']
+  labels    = ['extrapWeight_{}'.format(x) for x in Layers]
   header   += labels
   InputFile = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pid22_E65536_eta_20_25_phiCorrected.csv'
 else:
@@ -88,10 +101,10 @@ normalizer.adapt(np.array(train_features))
 print('INFO: Create model')
 model = tf.keras.Sequential()
 model.add(normalizer)
-if ActivationType != 'LeakyRelu':
-  model.add(layers.Dense(100, input_dim=Nfeatures, activation=ActivationType))
-  model.add(layers.Dense(100, activation=ActivationType))
-elif ActivationType != 'linear':
+if config.ActivationType != 'LeakyRelu':
+  model.add(layers.Dense(100, input_dim=Nfeatures, activation=config.ActivationType))
+  model.add(layers.Dense(100, activation=config.ActivationType))
+elif config.ActivationType != 'linear':
   model.add(layers.Dense(100, input_dim=Nfeatures))
   model.add(layers.Dense(100))
 else: # LeakyRelu
@@ -105,7 +118,7 @@ model.summary()
 # Compile model
 print('INFO: Compile model')
 model.compile(
-    optimizer=tf.optimizers.Adam(learning_rate=LearningRate),
+    optimizer=tf.optimizers.Adam(learning_rate=config.LearningRate),
     loss='mean_absolute_error',
     metrics=['MeanSquaredError']) # Computes the mean squared error between y_true and y_pred
 
@@ -118,7 +131,7 @@ model.save(model_filename)
 print('INFO: Fit model')
 history = model.fit(
     train_features, train_labels,
-    epochs=Nepochs,
+    epochs=config.Nepochs,
     verbose=1,
     validation_split = 0.3)
 
