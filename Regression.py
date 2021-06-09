@@ -3,6 +3,9 @@ import ROOT
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
+# Set seeds to get reproducible results
+np.random.seed(1)
+tf.random.set_seed(1)
 import pandas as pd
 import seaborn as sns
 import os,sys
@@ -22,7 +25,7 @@ from tensorflow.keras.layers.experimental import preprocessing
 ##################################################################
 
 InputDataType  = 'Real' # Options: Example, Real
-ActivationType = 'tanh' # Options: relu, tanh, linear, LeakyRelu
+ActivationType = 'relu' # Options: relu, tanh, linear, LeakyRelu
 Nepochs        = 200
 
 ##################################################################
