@@ -26,19 +26,22 @@ from tensorflow.keras.layers.experimental import preprocessing
 
 InputDataType         = 'Real' # Options: Example, Real
 ActivationType        = 'relu' # Options: relu, tanh, linear, LeakyRelu
-Nepochs               = 100    # 200 works well for a single energy
-LearningRate          = 0.001  # 0.001 works well for a single energy
+Nepochs               = 200
+LearningRate          = 0.001
+Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
 UseBatchNormalization = False
-UseNormalizer         = False  # It's not needed when input data is already normalized
+UseNormalizer         = True
 UseEarlyStopping      = True
 UseModelCheckPoint    = True
+NnodesHiddenLayers    = 100
+Debug                 = False
 
 ##################################################################
 # DO NOT MODIFY (below this line)
 ##################################################################
 
 class Config:
-  def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm):
+  def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm,loss,Nnodes):
     self.InputDataType         = datatype
     self.ActivationType        = activation
     self.Nepochs               = epochs
@@ -47,9 +50,11 @@ class Config:
     self.UseNormalizer         = useNormalizer
     self.UseModelCheckPoint    = useMCP
     self.UseBatchNormalization = useBatchNorm
+    self.Loss                  = loss
+    self.NnodesHiddenLayers    = Nnodes
 
 # Print chosen setup
-config = Config(InputDataType,ActivationType,Nepochs,LearningRate,UseEarlyStopping,UseNormalizer,UseModelCheckPoint,UseBatchNormalization)
+config = Config(InputDataType,ActivationType,Nepochs,LearningRate,UseEarlyStopping,UseNormalizer,UseModelCheckPoint,UseBatchNormalization,Loss,NnodesHiddenLayers)
 print('###################################################################################')
 print('INFO: Setup:')
 print(vars(config))
@@ -65,6 +70,7 @@ if config.ActivationType not in AllowedActivationTypes:
 
 # Get data
 print('INFO: Get data')
+if Debug: print('DEBUG: Get list of input CSV files')
 if config.InputDataType == 'Example':
   header     = ['x','x+2','y']
   features   = ['x','x+2']
@@ -73,23 +79,20 @@ if config.InputDataType == 'Example':
 elif config.InputDataType == 'Real':
   Layers     = [0,1,2,3,12]
   header     = ['e_{}'.format(x) for x in Layers]
-  # Temporary
-  #features   = header+['etrue']
   features   = header.copy()
+  features  += ['etrue']
   labels     = ['extrapWeight_{}'.format(x) for x in Layers]
   header    += labels
   header    += ['etrue']
   InputFiles = []
-  #PATH       = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/v2/'
-  PATH       = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/v1/' # Temporary
+  PATH       = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/v2/'
   for File in os.listdir(PATH):
-    # Temporary
-    if 'E65536' not in File: continue
     InputFiles.append(PATH+File)
 else:
   print('ERROR: InputDataType not recognized, exiting')
   sys.exit(1)
 # Import dataset using pandas
+if Debug: print('DEBUG: Read each CSV file and create a single DF')
 DFs = []
 for InputFile in InputFiles:
   raw_dataset = pd.read_csv(InputFile, names=header, na_values='?', comment='\t', sep=',', skiprows=[0] , skipinitialspace=True)
@@ -133,31 +136,32 @@ print('INFO: Create model')
 model = tf.keras.Sequential()
 if config.UseNormalizer: model.add(normalizer)
 if config.ActivationType != 'LeakyRelu' and config.ActivationType != 'linear':
-  model.add(layers.Dense(100, input_dim=Nfeatures, activation=config.ActivationType))
+  model.add(layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures, activation=config.ActivationType))
   if config.UseBatchNormalization:
     model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(layers.Dense(100, activation=config.ActivationType))
-elif config.ActivationType != 'linear':
-  model.add(layers.Dense(100, input_dim=Nfeatures))
+  model.add(layers.Dense(config.NnodesHiddenLayers, activation=config.ActivationType))
+elif config.ActivationType == 'linear':
+  model.add(layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
   if config.UseBatchNormalization:
     model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(layers.Dense(100))
+  model.add(layers.Dense(config.NnodesHiddenLayers))
 else: # LeakyRelu
-  model.add(layers.Dense(100, input_dim=Nfeatures))
+  model.add(layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
   model.add(layers.LeakyReLU())
   if config.UseBatchNormalization:
     model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(layers.Dense(100))
+  model.add(layers.Dense(config.NnodesHiddenLayers))
   model.add(layers.LeakyReLU())
 model.add(layers.Dense(Nlabels))
 model.summary()
 
 # Compile model
 print('INFO: Compile model')
+Loss = 'mean_absolute_error' if config.Loss == 'MAE' else 'mean_squared_error'
 model.compile(
     optimizer=tf.optimizers.Adam(learning_rate=config.LearningRate),
-    loss='mean_absolute_error',
-    metrics=['MeanSquaredError']) # Computes the mean squared error between y_true and y_pred
+    loss=Loss,
+    metrics=['MeanAbsoluteError','MeanSquaredError']) # Computes the mean absolute error and the mean squared error b/w y_true and y_pred
 
 Callbacks = []
 
@@ -195,7 +199,10 @@ if not config.UseModelCheckPoint:
 
 # Load the best model
 if config.UseModelCheckPoint:
-  model = keras.models.load_model('{}_best_model.h5'.format(OutBaseName))
+  if config.UseNormalizer:
+    model = keras.models.load_model('{}_best_model.h5'.format(OutBaseName),custom_objects={'Normalization': preprocessing.Normalization})
+  else:
+    model = keras.models.load_model('{}_best_model.h5'.format(OutBaseName))
 
 # Compare true vs prediction
 Features_dataset = dataset[features].copy().values.reshape(-1,Nfeatures)
@@ -213,7 +220,7 @@ for Label in labels:
 # Plot loss vs epochs
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
-plot_loss(history,OutBaseName)
+plot_loss(history,OutBaseName,config.Loss)
 
 # Evaluate
 print('INFO: Evaluate')
