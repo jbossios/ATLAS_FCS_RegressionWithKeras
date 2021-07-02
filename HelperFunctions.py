@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # Plot loss vs epochs
-def plot_loss(history,extra,loss):
+def plot_loss(history,outPATH,extra,loss):
   plt.figure('{}_loss'.format(extra))
   plt.plot(history.history['loss'], label='loss')
   plt.plot(history.history['val_loss'], label='val_loss') # Temporary
@@ -11,5 +11,5 @@ def plot_loss(history,extra,loss):
   plt.ylabel('{} (loss)'.format(LossDef))
   plt.legend()
   plt.grid(True)
-  plt.savefig('{}_loss_vs_epochs.pdf'.format(extra))
+  plt.savefig('{}/{}_loss_vs_epochs.pdf'.format(outPATH,extra))
 
