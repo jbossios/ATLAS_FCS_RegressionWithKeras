@@ -1,9 +1,11 @@
 
+Particle = 'pions'
+
 # PATH to input ROOT files
 InputPATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputs/'
 
 # Where to locate output CSV files
-OutputPATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/v2/'
+OutputPATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/'
 
 # Name of TTree
 TTreeName = 'rootTree'
@@ -11,6 +13,9 @@ TTreeName = 'rootTree'
 #############################################
 # DO NOT MODIFY (everything below this line)
 #############################################
+
+InputPATH  += '{}/'.format(Particle)
+OutputPATH += '{}/'.format(Particle)
 
 import os,sys,csv
 from ROOT import *
@@ -23,6 +28,9 @@ header += ['etrue']
 
 # Loop over input files
 for File in os.listdir(InputPATH):
+
+  if Particle == 'pions' and 'phiCorrected' in File: continue # skip phiCorrected files
+
   print('INFO: Preparing CSV file for {}'.format(InputPATH+File))
 
   # Read true energy from input filename
@@ -30,7 +38,13 @@ for File in os.listdir(InputPATH):
 
   # Get TTree
   tfile = TFile.Open(InputPATH+File)
+  if not tfile:
+    print('ERROR: {} not found, exiting'.format(InputPATH+File))
+    sys.exit(1)
   tree  = tfile.Get(TTreeName)
+  if not tree:
+    print('WARNING: {} not found in {}, file will be skipped'.format(TTreeName,InputPATH+File))
+    continue # skip file
 
   # Open the CSV file
   outFileName = OutputPATH+File.replace('.root','.csv')
@@ -41,9 +55,19 @@ for File in os.listdir(InputPATH):
 
   # write the header
   writer.writerow(header)
+
+  maxEvents = -1
+
+  # Temporary fix due to problem with input TTree for E2097152
+  if 'E2097152' in File:
+    maxEvents = 2000
  
   # Loop over events
+  counter = 0
   for event in tree: 
+    counter += 1
+    if maxEvents != -1:
+      if counter > maxEvents: break
     # write a row to the csv file
     totalEnergy = 0 # total deposited energy
     for var in header:
