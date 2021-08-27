@@ -11,7 +11,7 @@ Nepochs               = 200
 LearningRate          = 0.001
 Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
 UseBatchNormalization = False
-UseNormalizer         = True
+UseNormalizer         = False
 UseEarlyStopping      = True
 UseModelCheckpoint    = True
 NnodesHiddenLayers    = 100
@@ -40,7 +40,6 @@ if UseBatchNormalization: command += " --useBatchNormalization"
 if UseNormalizer:         command += " --useNormalizationLayer"
 if UseEarlyStopping:      command += " --useEarlyStopping"
 if UseModelCheckpoint:    command += " --useModelCheckpoint"
-command += ' > LocalTests/Log_{}_{} 2>&1 &'.format(Particle,EtaRange)
-#print(command)
+print(command)
 os.system(command)
 

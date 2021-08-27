@@ -1,6 +1,6 @@
 
 Particle = 'photons'
-Version  = 'v01'
+Version  = 'v03'
 
 ################################################################
 # DO NOT MODIFY (below this line)
@@ -15,7 +15,7 @@ else:
   sys.exit(1)
   
 Activation                = 'relu'
-NormalizationLayerInModel = True
+NormalizationLayerInModel = False
 
 PATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/{}/'.format(Version)
 
@@ -78,6 +78,8 @@ for EtaBin in EtaBins:
   for energy in InputFiles:
     raw_dataset = pd.read_csv(InputFiles[energy], names=header, na_values='?', comment='\t', sep=',', skiprows=[0] , skipinitialspace=True)
     DFs[energy] = raw_dataset.copy()
+
+  NNenergies = [energy for energy in InputFiles]
   
   ###################
   # Get FCS weights
@@ -92,7 +94,9 @@ for EtaBin in EtaBins:
   for File in os.listdir(path):
     if EtaBin+'_zv' not in File: continue # select only files for the requested eta bin
     if Particle == 'photons':
-      if 'pid22' not in File: continue
+      if 'pid22_' not in File: continue
+    elif Particle == 'pions':
+      if 'pid211_' not in File: continue
     else:
       print('{} not supported yet, exiting'.format(Particle))
       sys.exit(1)
@@ -111,7 +115,9 @@ for EtaBin in EtaBins:
   path = '/eos/user/a/ahasib/Data/ParametrizationProductionVer15/'
   for Folder in os.listdir(path):
     if Particle == 'photons':
-      if 'pid22' not in Folder: continue
+      if 'pid22_' not in Folder: continue
+    elif Particle == 'pions':
+      if 'pid211_' not in Folder: continue
     else:
       print('{} not supported yet, exiting'.format(Particle))
       sys.exit(1)
@@ -131,11 +137,16 @@ for EtaBin in EtaBins:
   for energy in FCSDFs:
     for layer in Layers:
       FCSDFs[energy]['extrapWeight_{}'.format(layer)] = FCSDFs[energy].apply(lambda row: getWeight(row,energy,layer), axis=1)
-  
+
+  FCSenergies = [energy for energy in FCSDFs]
+
   # Protection
   if len(DFs) != len(FCSDFs):
-    print('ERROR: Number of energies cases do not match b/w data and FCS, exiting')
-    sys.exit(0)
+    print('WARNING: Number of energies cases do not match b/w data and FCS, energies missing in one of them will be skipped')
+    print('NN energies:')
+    print(NNenergies)
+    print('FCS energies:')
+    print(FCSenergies)
   
   ###############################
   # Compare true vs prediction
@@ -149,6 +160,9 @@ for EtaBin in EtaBins:
     # Prepare numpy arrays
     Nfeatures  = len(features)
     Nlabels    = len(labels)
+    if energy not in DFs:
+      print('WARNING: skipping energy {}'.format(energy))
+      continue
     dataset    = DFs[energy]
     FCSdataset = FCSDFs[energy]
     Features_dataset = dataset[features].copy().values.reshape(-1,Nfeatures)
