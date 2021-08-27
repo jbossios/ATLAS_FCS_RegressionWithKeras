@@ -5,7 +5,7 @@
 #                                                  #
 ####################################################
 
-Version  = 'v01'
+Version  = 'v10'
 Particle = 'pions'
 Test     = False
 BasePATH = "/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/" # output path
@@ -14,7 +14,7 @@ BasePATH = "/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/" # outpu
 ## DO NOT MODIFY
 ######################################################################
 
-if Particle == 'photons':
+if Particle == 'photons' or Particle == 'electrons':
   EtaBins  = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
 elif Particle == 'pions':
   EtaBins  = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]

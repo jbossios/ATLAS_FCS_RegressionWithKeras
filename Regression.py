@@ -1,24 +1,11 @@
+print('INFO: Running Regression.py')
+
 # Import modules
-import ROOT
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import numpy as np
-# Set seeds to get reproducible results
-np.random.seed(1)
-tf.random.set_seed(1)
-import pandas as pd
-import seaborn as sns
 import os,sys,argparse
-from HelperFunctions import *
 
-# Make numpy printouts easier to read.
-np.set_printoptions(precision=3, suppress=True)
-
-# Import keras
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers.experimental import preprocessing
+##########################################################################################################
+# DO NOT MODIFY (below this line)
+##########################################################################################################
 
 ##########################################################################################################
 # Read arguments
@@ -41,10 +28,6 @@ parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useMod
 parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False)
 args = parser.parse_args()
 
-##################################################################
-# Choose data
-##################################################################
-
 InputDataType         = args.inputDataType
 ParticleType          = args.particleType
 EtaRange              = args.etaRange
@@ -59,10 +42,6 @@ UseEarlyStopping      = args.useEarlyStopping
 UseModelCheckPoint    = args.useModelCheckpoint
 NnodesHiddenLayers    = int(args.nNodes)
 Debug                 = args.debug
-
-##################################################################
-# DO NOT MODIFY (below this line)
-##################################################################
 
 class Config:
   def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm,loss,Nnodes,particle,eta,outPATH):
@@ -105,32 +84,45 @@ if config.InputDataType == 'Example':
   InputFiles = ['TestData.csv']
 elif config.InputDataType == 'Real':
   Layers     = [0,1,2,3,12]
+  if config.Particle == 'pions': Layers += [13,14]
   header     = ['e_{}'.format(x) for x in Layers]
-  features   = header.copy()
+  header    += ['ef_{}'.format(x) for x in Layers]
+  features   = ['ef_{}'.format(x) for x in Layers]
   features  += ['etrue']
   labels     = ['extrapWeight_{}'.format(x) for x in Layers]
   header    += labels
   header    += ['etrue']
   InputFiles = []
   if config.Particle == 'photons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v2/'
+    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v7/' # normalized inputs
   elif config.Particle == 'pions':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/'
+    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/v3/' # normalized inputs (using non-phiCorrected files)
+  elif config.Particle == 'electrons':
+    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons/phiCorrected/' # normalized inputs
   else:
     print('ERROR: {} not supported yet, exiting'.format(config.Particle))
     sys.exit(1)
   for File in os.listdir(PATH):
-    if 'eta_{}'.format(config.EtaRange) not in File: continue # Select only files for the requested eta bin
+    if '.csv' not in File or 'eta_{}'.format(config.EtaRange) not in File: continue # Select only files for the requested eta bin
     InputFiles.append(PATH+File)
 else:
   print('ERROR: InputDataType not recognized, exiting')
   sys.exit(1)
+# Protection
+if len(InputFiles) == 0:
+  print('ERROR: No input files found, exiting')
+  sys.exit(1)
 # Import dataset using pandas
+import pandas as pd
 if Debug: print('DEBUG: Read each CSV file and create a single DF')
 DFs = []
 for InputFile in InputFiles:
+  print('INFO: Reading {}'.format(InputFile))
   raw_dataset = pd.read_csv(InputFile, names=header, na_values='?', comment='\t', sep=',', skiprows=[0] , skipinitialspace=True)
   DFs.append(raw_dataset.copy())
+if len(DFs) == 0:
+  print('ERROR: No DF is available, exiting')
+  sys.exit(1)
 dataset = DFs[0]
 for idf in range(1,len(DFs)):
   dataset = pd.concat([dataset,DFs[idf]],ignore_index=True)
@@ -142,11 +134,12 @@ print('INFO: Split data into train and test')
 train_dataset = dataset.sample(frac=0.8, random_state=0)
 test_dataset  = dataset.drop(train_dataset.index)
 
-# Plot correlations
-print('INFO: Plot variable distributions')
-plt.figure('correlation')
-plot = sns.pairplot(train_dataset, diag_kind='kde')
-plot.savefig('{}/{}_{}_{}_Correlations.pdf'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange))
+## Plot correlations (takes too much time)
+#import seaborn as sns
+#print('INFO: Plot variable distributions')
+#plt.figure('correlation')
+#plot = sns.pairplot(train_dataset, diag_kind='kde')
+#plot.savefig('{}/{}_{}_{}_Correlations.pdf'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange))
 
 # Split features from labels
 # Separate the target value (label") from the features. This label is the value that you will train the model to predict
@@ -160,34 +153,55 @@ test_labels    = test_dataset[labels].copy()
 Nfeatures = len(features)
 Nlabels   = len(labels)
 
+# Import tensorflow and numpy
+import tensorflow as tf
+import numpy as np
+# Set seeds to get reproducible results
+np.random.seed(1)
+tf.random.set_seed(1)
+
 # Normalizer
 if config.UseNormalizer:
-  normalizer = preprocessing.Normalization(input_shape=[Nfeatures,])
+  normalizer = tf.keras.layers.experimental.preprocessing.Normalization(input_shape=[Nfeatures,])
   normalizer.adapt(np.array(train_features))
 
 # Choose model
 print('INFO: Create model')
 model = tf.keras.Sequential()
 if config.UseNormalizer: model.add(normalizer)
+if config.UseBatchNormalization:
+  model.add(tf.keras.layers.BatchNormalization(input_shape=[Nfeatures,]))
 if config.ActivationType != 'LeakyRelu' and config.ActivationType != 'linear':
-  model.add(layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures, activation=config.ActivationType))
-  if config.UseBatchNormalization:
-    model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(layers.Dense(config.NnodesHiddenLayers, activation=config.ActivationType))
+  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures, activation=config.ActivationType))
+  #if config.UseBatchNormalization:
+  #  model.add(layers.BatchNormalization())
+  #if config.UseBatchNormalization:
+  #  model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
+  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, activation=config.ActivationType))
 elif config.ActivationType == 'linear':
-  model.add(layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
-  if config.UseBatchNormalization:
-    model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(layers.Dense(config.NnodesHiddenLayers))
+  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
+  #if config.UseBatchNormalization:
+  #  model.add(layers.BatchNormalization())
+  #if config.UseBatchNormalization:
+  #  model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
+  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers))
 else: # LeakyRelu
-  model.add(layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
-  model.add(layers.LeakyReLU())
-  if config.UseBatchNormalization:
-    model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(layers.Dense(config.NnodesHiddenLayers))
-  model.add(layers.LeakyReLU())
-model.add(layers.Dense(Nlabels))
+  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
+  model.add(tf.keras.layers.LeakyReLU())
+  #if config.UseBatchNormalization:
+  #  model.add(layers.BatchNormalization())
+  #if config.UseBatchNormalization:
+  #  model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
+  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers))
+  model.add(tf.keras.layers.LeakyReLU())
+#if config.UseBatchNormalization:
+#  model.add(layers.BatchNormalization())
+model.add(tf.keras.layers.Dense(Nlabels))
 model.summary()
+tf.keras.utils.plot_model(model, to_file='{}/model_{}_{}.png'.format(config.outPATH,config.Particle,config.EtaRange), show_shapes=True)
+for layer in model.layers:
+  print('layer name: {}'.format(layer.name))
+  print(layer.get_weights())
 
 # Compile model
 print('INFO: Compile model')
@@ -209,12 +223,18 @@ if config.UseModelCheckPoint:
   MC = tf.keras.callbacks.ModelCheckpoint('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
   Callbacks.append(MC)
 
+# Terminate on NaN such that it is easier to debug
+Callbacks.append(tf.keras.callbacks.TerminateOnNaN())
+
 # Fit
 print('INFO: Fit model')
 if len(Callbacks) > 0:
   history = model.fit(
     train_features, train_labels,
     epochs=config.Nepochs,
+    #batch_size=132,        # left in case of need
+    #steps_per_epoch=1,     # left in case of need
+    #sample_weight=weights, # Optional Numpy array of weights for the training samples, used for weighting the loss function (during training only)
     verbose=1,
     validation_split = 0.4,
     callbacks=Callbacks)
@@ -225,6 +245,13 @@ else:
     verbose=1,
     validation_split = 0.4)
 
+# Plot loss vs epochs
+hist = pd.DataFrame(history.history)
+hist['epoch'] = history.epoch
+#from HelperFunctions import *
+import HelperFunctions
+HelperFunctions.plot_loss(history,config.outPATH,OutBaseName+'_'+config.Particle+'_'+config.EtaRange,config.Loss)
+
 # Save the model
 if not config.UseModelCheckPoint:
   print('INFO: Save model')
@@ -234,15 +261,16 @@ if not config.UseModelCheckPoint:
 # Load the best model
 if config.UseModelCheckPoint:
   if config.UseNormalizer:
-    model = keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange),custom_objects={'Normalization': preprocessing.Normalization})
+    model = tf.keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange),custom_objects={'Normalization': preprocessing.Normalization})
   else:
-    model = keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange))
+    model = tf.keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange))
 
 # Compare true vs prediction
 Features_dataset = dataset[features].copy().values.reshape(-1,Nfeatures)
 Labels_dataset   = dataset[labels].copy().values.reshape(-1,Nlabels)
 pred             = model.predict(Features_dataset)
 counter = 0
+import matplotlib.pyplot as plt
 for Label in labels:
   plt.figure('true_vs_prediction_{}'.format(Label))
   plt.hist(Labels_dataset[:,counter],label=Label+' true',bins=50)
@@ -250,11 +278,6 @@ for Label in labels:
   plt.legend()
   plt.savefig('{}/{}_{}_{}_true_vs_prediction_{}.pdf'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange,Label))
   counter += 1
-
-# Plot loss vs epochs
-hist = pd.DataFrame(history.history)
-hist['epoch'] = history.epoch
-plot_loss(history,config.outPATH,OutBaseName+'_'+config.Particle+'_'+config.EtaRange,config.Loss)
 
 # Evaluate
 print('INFO: Evaluate')

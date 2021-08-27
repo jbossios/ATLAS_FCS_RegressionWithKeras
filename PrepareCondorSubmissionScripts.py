@@ -5,14 +5,14 @@
 
 # Choose settings
 
-Version               = 'v01'
+Version               = 'v10'
 Particle              = 'pions'
 ActivationType        = 'relu' # Options: relu, tanh, linear, LeakyRelu
 Nepochs               = 200
 LearningRate          = 0.001
 Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
 UseBatchNormalization = False
-UseNormalizer         = True
+UseNormalizer         = False
 UseEarlyStopping      = True
 UseModelCheckpoint    = True
 NnodesHiddenLayers    = 100
@@ -22,7 +22,7 @@ NnodesHiddenLayers    = 100
 #######################################################################################################
 
 # Supported eta bins
-if Particle == 'photons':
+if Particle == 'photons' or Particle == 'electrons':
   EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
 elif Particle == 'pions':
   EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]
