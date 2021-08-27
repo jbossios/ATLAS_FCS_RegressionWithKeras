@@ -1,0 +1,7 @@
+*tar.gz
+*.csv
+Plotter/Plots/
+SubmissionScripts/
+Logs/
+Outputs/
+LocalTests/

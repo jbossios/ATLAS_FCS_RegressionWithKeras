@@ -1,0 +1,7 @@
+v07: Version using v6 inputs (which now are correctly normalized, no nan)
+
+v08: Version using v7 inputs (which now normalize etrue and also use all energy samples when computing mean and std. dev. values)
+
+v09: Running for electrons with first version of CSV files (using phiCorrected files). Same layers/eta bins as for photons. Same configuration as for photons used in v08
+
+v10: Same as v08/09 but for pions
