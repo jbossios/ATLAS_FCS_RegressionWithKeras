@@ -1,6 +1,7 @@
 *tar.gz
 *.csv
 Plotter/Plots/
+Plotter/True_vs_Prediction*
 SubmissionScripts/
 Logs/
 Outputs/
