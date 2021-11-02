@@ -12,20 +12,21 @@ import os,sys,argparse
 ##########################################################################################################
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--inputDataType',         action='store',      dest="inputDataType")
-parser.add_argument('--particleType',          action='store',      dest="particleType")
-parser.add_argument('--etaRange',              action='store',      dest="etaRange")
-parser.add_argument('--outPATH',               action='store',      dest="outPATH")
-parser.add_argument('--activation',            action='store',      dest="activationType"    , default='relu')
-parser.add_argument('--nEpochs',               action='store',      dest="nEpochs"           , default=200)
-parser.add_argument('--learningRate',          action='store',      dest="learningRate"      , default=0.001)
-parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE')
-parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100)
-parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False)
-parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False)
-parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False)
-parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useModelCheckpoint", default=False)
-parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False)
+parser.add_argument('--inputDataType',         action='store',      dest="inputDataType",                      help='Input data type')
+parser.add_argument('--particleType',          action='store',      dest="particleType",                       help='Particle type')
+parser.add_argument('--etaRange',              action='store',      dest="etaRange",                           help='|eta| range')
+parser.add_argument('--outPATH',               action='store',      dest="outPATH",                            help='Output path')
+parser.add_argument('--activation',            action='store',      dest="activationType"    , default='relu', help='Layer activation type')
+parser.add_argument('--nEpochs',               action='store',      dest="nEpochs"           , default=200,    help='Number of epochs')
+parser.add_argument('--learningRate',          action='store',      dest="learningRate"      , default=0.001,  help='Learning rate')
+parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss')
+parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer')
+parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers')
+parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization')
+parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False,  help='Use preprocessing.Normalization layer')
+parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False,  help='Use EarlyStopping')
+parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useModelCheckpoint", default=False,  help='Use ModelCheckpoint')
+parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False,  help='Run in debug mode')
 args = parser.parse_args()
 
 InputDataType         = args.inputDataType
@@ -41,10 +42,11 @@ UseNormalizer         = args.useNormLayer
 UseEarlyStopping      = args.useEarlyStopping
 UseModelCheckPoint    = args.useModelCheckpoint
 NnodesHiddenLayers    = int(args.nNodes)
+NhiddenLayers         = int(args.nLayers)
 Debug                 = args.debug
 
 class Config:
-  def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm,loss,Nnodes,particle,eta,outPATH):
+  def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm,loss,Nnodes,Nlayers,particle,eta,outPATH):
     self.InputDataType         = datatype
     self.ActivationType        = activation
     self.Nepochs               = epochs
@@ -55,12 +57,13 @@ class Config:
     self.UseBatchNormalization = useBatchNorm
     self.Loss                  = loss
     self.NnodesHiddenLayers    = Nnodes
+    self.NhiddenLayers         = Nlayers
     self.Particle              = particle
     self.EtaRange              = eta
     self.outPATH               = outPATH
 
 # Print chosen setup
-config = Config(InputDataType,ActivationType,Nepochs,LearningRate,UseEarlyStopping,UseNormalizer,UseModelCheckPoint,UseBatchNormalization,Loss,NnodesHiddenLayers,ParticleType,EtaRange,OutputPATH)
+config = Config(InputDataType,ActivationType,Nepochs,LearningRate,UseEarlyStopping,UseNormalizer,UseModelCheckPoint,UseBatchNormalization,Loss,NnodesHiddenLayers,NhiddenLayers,ParticleType,EtaRange,OutputPATH)
 print('###################################################################################')
 print('INFO: Setup:')
 print(vars(config))
@@ -84,14 +87,18 @@ if config.InputDataType == 'Example':
   InputFiles = ['TestData.csv']
 elif config.InputDataType == 'Real':
   Layers     = [0,1,2,3,12]
-  if config.Particle == 'pions': Layers += [13,14]
+  if 'pions' in config.Particle or config.Particle == 'all': Layers += [13,14]
   header     = ['e_{}'.format(x) for x in Layers]
   header    += ['ef_{}'.format(x) for x in Layers]
   features   = ['ef_{}'.format(x) for x in Layers]
   features  += ['etrue']
+  if config.Particle=='all' or config.Particle=='electronsANDphotons' or config.Particle=='pionsANDelectrons':
+    features  += ['pdgId']
   labels     = ['extrapWeight_{}'.format(x) for x in Layers]
   header    += labels
   header    += ['etrue']
+  if config.Particle=='all' or config.Particle=='electronsANDphotons' or config.Particle=='pionsANDelectrons':
+    header    += ['pdgId']
   InputFiles = []
   if config.Particle == 'photons':
     PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v7/' # normalized inputs
@@ -99,6 +106,13 @@ elif config.InputDataType == 'Real':
     PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/v3/' # normalized inputs (using non-phiCorrected files)
   elif config.Particle == 'electrons':
     PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons/phiCorrected/' # normalized inputs
+  elif config.Particle == 'all':
+    #PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v1/' # w/o pdgId
+    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v4/' # w/  pdgId
+  elif config.Particle == 'electronsANDphotons':
+    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons_and_photons/v1/'
+  elif config.Particle == 'pionsANDelectrons':
+    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons/v1/'
   else:
     print('ERROR: {} not supported yet, exiting'.format(config.Particle))
     sys.exit(1)
@@ -141,6 +155,13 @@ test_dataset  = dataset.drop(train_dataset.index)
 #plot = sns.pairplot(train_dataset, diag_kind='kde')
 #plot.savefig('{}/{}_{}_{}_Correlations.pdf'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange))
 
+# Import tensorflow and numpy
+import tensorflow as tf
+import numpy as np
+# Set seeds to get reproducible results
+np.random.seed(1)
+tf.random.set_seed(1)
+
 # Split features from labels
 # Separate the target value (label") from the features. This label is the value that you will train the model to predict
 print('INFO: Split features from labels')
@@ -152,13 +173,6 @@ test_labels    = test_dataset[labels].copy()
 # Get number of features and labels
 Nfeatures = len(features)
 Nlabels   = len(labels)
-
-# Import tensorflow and numpy
-import tensorflow as tf
-import numpy as np
-# Set seeds to get reproducible results
-np.random.seed(1)
-tf.random.set_seed(1)
 
 # Normalizer
 if config.UseNormalizer:
@@ -173,35 +187,24 @@ if config.UseBatchNormalization:
   model.add(tf.keras.layers.BatchNormalization(input_shape=[Nfeatures,]))
 if config.ActivationType != 'LeakyRelu' and config.ActivationType != 'linear':
   model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures, activation=config.ActivationType))
-  #if config.UseBatchNormalization:
-  #  model.add(layers.BatchNormalization())
-  #if config.UseBatchNormalization:
-  #  model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, activation=config.ActivationType))
+  for ilayer in range(1,config.NhiddenLayers):
+    model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, activation=config.ActivationType))
 elif config.ActivationType == 'linear':
   model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
-  #if config.UseBatchNormalization:
-  #  model.add(layers.BatchNormalization())
-  #if config.UseBatchNormalization:
-  #  model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers))
+  for ilayer in range(1,config.NhiddenLayers):
+    model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers))
 else: # LeakyRelu
   model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers, input_dim=Nfeatures))
   model.add(tf.keras.layers.LeakyReLU())
-  #if config.UseBatchNormalization:
-  #  model.add(layers.BatchNormalization())
-  #if config.UseBatchNormalization:
-  #  model.add(layers.BatchNormalization(input_shape=[Nfeatures,]))
-  model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers))
-  model.add(tf.keras.layers.LeakyReLU())
-#if config.UseBatchNormalization:
-#  model.add(layers.BatchNormalization())
+  for ilayer in range(1,config.NhiddenLayers):
+    model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers))
+    model.add(tf.keras.layers.LeakyReLU())
 model.add(tf.keras.layers.Dense(Nlabels))
 model.summary()
 tf.keras.utils.plot_model(model, to_file='{}/model_{}_{}.png'.format(config.outPATH,config.Particle,config.EtaRange), show_shapes=True)
-for layer in model.layers:
-  print('layer name: {}'.format(layer.name))
-  print(layer.get_weights())
+#for layer in model.layers:
+#  print('layer name: {}'.format(layer.name))
+#  print(layer.get_weights())
 
 # Compile model
 print('INFO: Compile model')
@@ -248,7 +251,6 @@ else:
 # Plot loss vs epochs
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
-#from HelperFunctions import *
 import HelperFunctions
 HelperFunctions.plot_loss(history,config.outPATH,OutBaseName+'_'+config.Particle+'_'+config.EtaRange,config.Loss)
 

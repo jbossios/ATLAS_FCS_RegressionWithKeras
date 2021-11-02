@@ -5,8 +5,8 @@
 #                                                  #
 ####################################################
 
-Version  = 'v10'
-Particle = 'pions'
+Version  = 'v22'
+Particle = 'electronsANDphotons'
 Test     = False
 BasePATH = "/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/" # output path
 
@@ -14,7 +14,7 @@ BasePATH = "/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/" # outpu
 ## DO NOT MODIFY
 ######################################################################
 
-if Particle == 'photons' or Particle == 'electrons':
+if 'photons' in Particle or 'electrons' in Particle or Particle == 'all':
   EtaBins  = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
 elif Particle == 'pions':
   EtaBins  = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]
@@ -30,7 +30,7 @@ os.system('mkdir -p Logs/{}'.format(Version))
 ROOTfiles = []
 AllFiles = os.listdir(PATH)
 for File in AllFiles:
-  if ".root" in File:
+  if ".h5" in File:
     ROOTfiles.append(File)
 
 counter      = 0

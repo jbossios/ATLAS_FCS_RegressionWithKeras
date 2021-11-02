@@ -1,10 +1,19 @@
 
-Particle = 'electrons'
-Version  = 'v09'
+Particle = 'pions'
+Version  = 'v10'
+Format   = 'png' # options: pdf, png
 
 ################################################################
 # DO NOT MODIFY (below this line)
 ################################################################
+
+VersionsWithPDGID = ['v13','v17','v18']
+VersionsWithPions = ['v13','v18']
+ParticlesInMultPartJobs = {
+  'v13' : 'all',
+  'v17' : 'electronsANDphotons',
+  'v18' : 'pionsANDelectrons',
+}
 
 if Particle == 'photons' or Particle == 'electrons':
   EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
@@ -14,7 +23,7 @@ else:
   print('ERROR: {} not supported yet, exiting'.format(Particle))
   sys.exit(1)
 
-Activation                = 'relu'
+Activation                = 'relu' # relu used upto v13, relu back again in v17 and so
 NormalizationLayerInModel = True if Version == 'v01' else False
 
 PATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/{}/'.format(Version)
@@ -26,6 +35,8 @@ import os,sys,ROOT
 os.system('mkdir Plots')
 os.system('mkdir Plots/{}'.format(Particle))
 os.system('mkdir Plots/{}/{}'.format(Particle,Version))
+FORMAT = 'PDF' if Format == 'pdf' else 'PNG'
+os.system('mkdir Plots/{}/{}/{}'.format(Particle,Version,FORMAT))
 
 ##########################
 # Loop over eta bins
@@ -46,43 +57,54 @@ for EtaBin in EtaBins:
   # Get model
   ###############################
   if NormalizationLayerInModel:
-    model = keras.models.load_model('{}/Real_{}_{}_{}_best_model.h5'.format(PATH,Activation,Particle,EtaBin),custom_objects={'Normalization': preprocessing.Normalization})
+    model = keras.models.load_model('{}/Real_{}_{}_{}_best_model.h5'.format(PATH,Activation,Particle if Version not in ParticlesInMultPartJobs else ParticlesInMultPartJobs[Version],EtaBin),custom_objects={'Normalization': preprocessing.Normalization})
   else:
-    model = keras.models.load_model('{}/Real_{}_{}_{}_best_model.h5'.format(PATH,Activation,Particle,EtaBin))
+    model = keras.models.load_model('{}/Real_{}_{}_{}_best_model.h5'.format(PATH,Activation,Particle if Version not in ParticlesInMultPartJobs else ParticlesInMultPartJobs[Version],EtaBin))
   
   ###############################
   # Get data
   ###############################
   print('INFO: Get data')
   Layers     = [0,1,2,3,12]
-  if Particle == 'pions': Layers += [13,14]
+  if Particle == 'pions' or Version in VersionsWithPions: Layers += [13,14]
   header     = ['e_{}'.format(x) for x in Layers]
   header    += ['ef_{}'.format(x) for x in Layers]
   features   = ['ef_{}'.format(x) for x in Layers]
   features  += ['etrue']
+  if Version in VersionsWithPDGID:
+    features  += ['pdgId']
   labels     = ['extrapWeight_{}'.format(x) for x in Layers]
   header    += labels
   header    += ['etrue']
+  if Version in VersionsWithPDGID:
+    header    += ['pdgId']
   InputFiles = dict()
-  if Particle == 'photons':
-    if Version == 'v01':
-      path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v3/'
-    elif Version == 'v07':
-      path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v6/'
-    elif Version == 'v08':
-      path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v7/'
-    else:
-      print('ERROR: {} not supported yet, exiting'.format(Version))
-      sys.exit(1)
-  elif Particle == 'pions':
-    path       = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/v3/'
-  elif Particle == 'electrons':
-    path       = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons/phiCorrected/'
-  else:
-    print('ERROR: {} not supported yet, exiting'.format(Particle))
+  path       = ''
+  if Version == 'v13':
+    path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v4/'
+  elif Version == 'v17':
+    path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons_and_photons/v1/'
+  elif Version == 'v18':
+    path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons/v1/'
+  else: # other versions using a single particle as inputs
+    if Particle == 'photons':
+      if Version == 'v01':
+        path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v3/'
+      elif Version == 'v07':
+        path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v6/'
+      else: # v08 or later
+        path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v7/'
+    elif Particle == 'pions':
+      path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/v3/'
+    elif Particle == 'electrons':
+      path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons/phiCorrected/'
+  if not path: # empty
+    print('ERROR: {}+{} combination not supported yet, exiting'.format(Particle,Version))
     sys.exit(1)
   for File in os.listdir(path):
     if 'eta_{}'.format(EtaBin) not in File: continue # select only files for the requested eta bin
+    pid = {'photons':'pid22', 'pions':'pid211', 'electrons':'pid11'}[Particle]
+    if pid    not in File: continue # skip other particles
     if '.csv' not in File: continue # skip non-CSV files
     Energy = File.split('E')[1].split('_')[0]
     InputFiles[Energy] = path+File
@@ -93,7 +115,7 @@ for EtaBin in EtaBins:
     DFs[energy] = raw_dataset.copy()
 
   NNenergies = [energy for energy in InputFiles]
-  
+
   ###################
   # Get FCS weights
   ###################
@@ -172,8 +194,6 @@ for EtaBin in EtaBins:
   # Loop over energies
   for energy in FCSDFs:
     if float(energy) < 1000: continue # skip true particle energies below 1 GeV
-    print('Energy = {}'.format(energy))
-    print('EtaBin = {}'.format(EtaBin))
     # Prepare numpy arrays
     Nfeatures  = len(features)
     Nlabels    = len(labels)
@@ -240,7 +260,7 @@ for EtaBin in EtaBins:
       ax.text(0.02, 0.65, 'Layer : {}'.format(Label.split('_')[1]), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes,fontsize=12)
       plt.xlabel('Estimation - True')
       plt.ylabel('Events')
-      plt.savefig('Plots/{}/{}/eta{}_E{}_{}_TruePredictionDiff_{}.pdf'.format(Particle,Version,EtaBin,energy,OutBaseName,Label))
+      plt.savefig('Plots/{}/{}/{}/eta{}_E{}_{}_TruePredictionDiff_{}.{}'.format(Particle,Version,FORMAT,EtaBin,energy,OutBaseName,Label,Format))
       plt.close('all')
       counter += 1
 

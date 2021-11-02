@@ -5,3 +5,27 @@ v08: Version using v7 inputs (which now normalize etrue and also use all energy 
 v09: Running for electrons with first version of CSV files (using phiCorrected files). Same layers/eta bins as for photons. Same configuration as for photons used in v08
 
 v10: Same as v08/09 but for pions
+
+v11: DO NOT USE
+
+v12: DO NOT USE
+
+v13: Using all particles as inputs using v4 version
+
+v14: Training photons alone, now using optimal parameters (tanh, 0.001 as learning_rate and 40 nodes)
+
+v15: Training pions alone, now using optimal parameters (tanh, 0.001 as learning_rate and 40 nodes)
+
+v16: Training electrons alone, now using optimal parameters (tanh, 0.001 as learning_rate and 40 nodes)
+
+v17: Training with electrons and photons
+
+v18: Training with pions and electrons
+
+v19: Training photons using set of parameters which give better performance for photons in eta_20_25
+
+v20: Training electrons using set of parameters which give better performance for photons in eta_20_25
+
+v21: Training pions using set of parameters which give better performance for photons in eta_20_25
+
+v22: Training electrons and photons using set of parameters which give better performance for photons in eta_20_25
