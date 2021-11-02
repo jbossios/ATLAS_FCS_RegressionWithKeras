@@ -77,6 +77,8 @@ if config.ActivationType not in AllowedActivationTypes:
   print('ERROR: ActivationType not recognized, exiting')
   sys.exit(1)
 
+from InputFiles import PATH2InputFiles as PATHs
+
 # Get data
 print('INFO: Get data')
 if Debug: print('DEBUG: Get list of input CSV files')
@@ -99,23 +101,13 @@ elif config.InputDataType == 'Real':
   header    += ['etrue']
   if config.Particle=='all' or config.Particle=='electronsANDphotons' or config.Particle=='pionsANDelectrons':
     header    += ['pdgId']
-  InputFiles = []
-  if config.Particle == 'photons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v7/' # normalized inputs
-  elif config.Particle == 'pions':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/v3/' # normalized inputs (using non-phiCorrected files)
-  elif config.Particle == 'electrons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons/phiCorrected/' # normalized inputs
-  elif config.Particle == 'all':
-    #PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v1/' # w/o pdgId
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v4/' # w/  pdgId
-  elif config.Particle == 'electronsANDphotons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons_and_photons/v1/'
-  elif config.Particle == 'pionsANDelectrons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons/v1/'
-  else:
-    print('ERROR: {} not supported yet, exiting'.format(config.Particle))
+  # Get path to input files
+  try:
+    PATH = PATHs[config.Particle]
+  except KeyError:
+    print(f'{config.Particle} is not available in PATH2InputFiles from InputFiles.py, exiting')
     sys.exit(1)
+  InputFiles = []
   for File in os.listdir(PATH):
     if '.csv' not in File or 'eta_{}'.format(config.EtaRange) not in File: continue # Select only files for the requested eta bin
     InputFiles.append(PATH+File)
@@ -131,7 +123,7 @@ import pandas as pd
 if Debug: print('DEBUG: Read each CSV file and create a single DF')
 DFs = []
 for InputFile in InputFiles:
-  print('INFO: Reading {}'.format(InputFile))
+  print(f'INFO: Reading {InputFile}')
   raw_dataset = pd.read_csv(InputFile, names=header, na_values='?', comment='\t', sep=',', skiprows=[0] , skipinitialspace=True)
   DFs.append(raw_dataset.copy())
 if len(DFs) == 0:
@@ -148,7 +140,7 @@ print('INFO: Split data into train and test')
 train_dataset = dataset.sample(frac=0.8, random_state=0)
 test_dataset  = dataset.drop(train_dataset.index)
 
-## Plot correlations (takes too much time)
+## Plot correlations (takes too much time, left in case of need)
 #import seaborn as sns
 #print('INFO: Plot variable distributions')
 #plt.figure('correlation')
@@ -202,8 +194,8 @@ else: # LeakyRelu
 model.add(tf.keras.layers.Dense(Nlabels))
 model.summary()
 tf.keras.utils.plot_model(model, to_file='{}/model_{}_{}.png'.format(config.outPATH,config.Particle,config.EtaRange), show_shapes=True)
-#for layer in model.layers:
-#  print('layer name: {}'.format(layer.name))
+#for layer in model.layers: # left in case of need
+#  print(f'layer name: {layer.name}')
 #  print(layer.get_weights())
 
 # Compile model
@@ -289,6 +281,6 @@ print(test_results)
 
 # Print epoch at which the training stopped
 if config.UseEarlyStopping:
-  print('Trainning stopped at epoch = {}'.format(ES.stopped_epoch))
+  print(f'Trainning stopped at epoch = {ES.stopped_epoch}')
 
 print('>>> ALL DONE <<<')

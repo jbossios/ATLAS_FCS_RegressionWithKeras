@@ -1,5 +1,6 @@
 *tar.gz
 *.csv
+*.pyc
 Plotter/Plots/
 Plotter/True_vs_Prediction*
 Plotter/Log*
@@ -7,3 +8,4 @@ SubmissionScripts/
 Logs/
 Outputs/
 LocalTests/
+HyperparameterOptimization/
