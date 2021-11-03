@@ -82,7 +82,7 @@ Submit condor jobs for a given version (Versions+Particle) with *Submit.py*:
   - This will be used to check if outputs are already available, this is helpful to resend jobs for only those which were not successful
 - Set Test to True to check how many jobs need to be sent (no job will actually be sent)
 - Logs will be written in *Logs/{Version}/*
-- Follow jobs with condor_q
+- Follow jobs with ```condor_q```
   - Condor tips:
     - Remove all condor jobs with ```condor_rm -all```
     - If a job appears as HOLD, check why with ```condor_q --analyze JOB_ID```
