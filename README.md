@@ -79,7 +79,8 @@ This will produce one submission script per eta bin for each version which will 
 
 Submit condor jobs for a given version (Versions+Particle) with *Submit.py*:
 - **Before submitting, choose where outputs will be located with BasePATH.**
-- Set Test to True to check how many jobs need to be sent (no job will actually be sent).
+  - This will be used to check if outputs are already available, this is helpful to resend jobs for only those which were not successful
+- Set Test to True to check how many jobs need to be sent (no job will actually be sent)
 - Logs will be written in *Logs/{Version}/*
 - Follow jobs with condor_q
   - Condor tips:
