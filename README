@@ -3,6 +3,10 @@ Purpose
 
 Train a DNN to learn how to predict the extrapolation weight for any layer/particle/eta range.
 
+How to clone?
+
+git clone git@github.com:jbossios/RegressionWithKeras.git
+
 Dependencies
 
 Python 3.6+
@@ -27,7 +31,10 @@ tf.random.set_seed(1)
 -- One model (h5 file) for each eta range [Real_{ACTIVATIONTYPE}_{PARTICLES}_{ETARANGE}_best_model.h5]
 -- Loss vs epochs (PDF) for each eta range [Real_{ACTIVATIONTYPE}_{PARTICLES}_{ETARANGE}_loss_vs_epochs.pdf]
 
-InputFiles.py
+InputFiles.py:
+- 
+
+CSV files should be created using MakeCSVfiles_NN.py from https://github.com/jbossios/PrepareCSVFiles
 
 How to run?
 
@@ -62,13 +69,14 @@ Prepare condor submission scripts with PrepareCondorSubmissionScripts_forOptimiz
 And submit condor jobs with Submit_Optimization.py
 Example script for making plots to find optimal hyperparameters: HyperparameterOptimization/FindOptimal_v3.py
 
-(optional) Compare predicted vs true extrapolation weight distributions
+(optional) Compare predicted-true extrapolation weight distribution b/w trained network and FCS
 
 $ cd Plotter/
 
-Run Setup.sh: $ source Setup.sh
+First: Produce CSV files with firstPCAbin values with MakeCSVfiles_FCS.py script from https://github.com/jbossios/PrepareCSVFiles
+This is needed to obtain the current extrapolation weights and compare with those predicted by the network
 
-NOTE: Need FCS inputs! FIXME add instructions
+Run Setup.sh: $ source Setup.sh
 
 Take a look at CompareExtrapWeights_True_vs_Prediction.py
 - Choose a single particle (photons, electrons or pions)
