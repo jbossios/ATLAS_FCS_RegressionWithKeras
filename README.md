@@ -20,15 +20,14 @@ git clone git@github.com:jbossios/RegressionWithKeras.git
 **Regression.py**:
 
 - Run with --help to get all options
-
 - Import input data (CSV files) using pandas
-
 - Split data into train and test (training data = 0.8 data)
--- Validation split = 0.4
+  - Validation split = 0.4
 - Use Sequential API from keras to create model to train
   - Seeds are set to get reproducible results (np.random.seed(1) and tf.random.set_seed(1))
   - Supported callbacks: EarlyStopping, ModelCheckpoint and TerminateOnNaN (always ON)
 - Evaluate performance on test dataset and print Loss
+- Features: energy fraction on each layer and true energy (all normalized such that mean=0 and stddev=1)
 - Outputs:
   - One model (h5 file) for each eta range \[Real\_{ACTIVATIONTYPE}\_{PARTICLES}\_{ETARANGE}_best_model.h5\]
   - Loss vs epochs (PDF) for each eta range \[Real\_{ACTIVATIONTYPE}\_{PARTICLES}\_{ETARANGE}_loss_vs_epochs.pdf\]
