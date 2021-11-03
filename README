@@ -1,0 +1,90 @@
+
+Purpose
+
+Train a DNN to learn how to predict the extrapolation weight for any layer/particle/eta range.
+
+Dependencies
+
+Python 3.6+
+tensorflow
+numpy
+pandas
+matplotlib.pyplot
+
+How it works?
+
+Regression.py:
+- Import input data (CSV files) using pandas
+- Split data into train and test (training data = 0.8 data)
+-- Validation split = 0.4
+- Use Sequential API from keras to create model to train
+-- Seeds are set to get reproducible results
+np.random.seed(1)
+tf.random.set_seed(1)
+-- Supported callbacks: EarlyStopping, ModelCheckpoint and TerminateOnNaN (always used)
+- Evaluate performance on test dataset and print Loss
+- Outputs:
+-- One model (h5 file) for each eta range [Real_{ACTIVATIONTYPE}_{PARTICLES}_{ETARANGE}_best_model.h5]
+-- Loss vs epochs (PDF) for each eta range [Real_{ACTIVATIONTYPE}_{PARTICLES}_{ETARANGE}_loss_vs_epochs.pdf]
+
+InputFiles.py
+
+How to run?
+
+Test on lxplus
+
+$ source Setup.sh
+Choose parameters in LocalTest.py and run it: $ python LocalTest.py
+This script will run Regression.py for a single eta range.
+Outputs will written to LocalTests/
+
+HTCondor
+
+Compress all scripts with Tar.sh: $ Tar.sh
+- This will produce FilesForSubmission.tar.gz
+Prepare condor submission scripts with PrepareCondorSubmissionScripts.py
+-- Choose the hyperparameters of the DNN
+-- It is possible to run different 'versions', each using a different set of particles
+-- Choose where outputs will be saved with OutPATH
+Run it: python PrepareCondorSubmissionScripts.py
+This will produce one submission script per eta bin for each version which will be written to SubmissionScripts/
+Submit condor jobs for a given version (Versions+Particle) with Submit.py. Before submitting, choose where outputs will be located with BasePATH. Set Test to True to check how many jobs need to be sent (no job will be sent). Logs will be written in Logs/{Version}
+- Follow jobs with condor_q
+-- Condor tips:
+---- Remove all condor jobs with condor_rm -all
+---- If a job appears as HOLD, check why with condor_q --analyze JOB_ID
+
+Hyperparameter optimization
+
+It is possible to make a scan over possible values for the hyperparameters.
+Define possible variations in HyperParametersToOptimize.py
+Prepare condor submission scripts with PrepareCondorSubmissionScripts_forOptimization.py
+And submit condor jobs with Submit_Optimization.py
+Example script for making plots to find optimal hyperparameters: HyperparameterOptimization/FindOptimal_v3.py
+
+(optional) Compare predicted vs true extrapolation weight distributions
+
+$ cd Plotter/
+
+Run Setup.sh: $ source Setup.sh
+
+NOTE: Need FCS inputs! FIXME add instructions
+
+Take a look at CompareExtrapWeights_True_vs_Prediction.py
+- Choose a single particle (photons, electrons or pions)
+- Choose version (needed to know from where to pick up inputs)
+- Choose output format: pdf or png (png is needed for making HTML pages, see below)
+- Choose activation type (needed to pick up correct files)
+- Choose PATH (location of input models, i.e. output of condor jobs, hence should match OutPATH from PrepareCondorSubmissionScripts.py)
+- Update if needed:
+-- VersionsWithPDGID: versions for which PDGID was saved (all versions in which training was done with more than one particle type)
+-- VersionsWithPions: versions in which more than one type of particle was used AND pions where one of those types
+-- ParticlesInMultPartJobs: Specify the particles used in versions in which the training was done with more than one particle type
+- Outputs will be saved in Plots/{PARTICLE}/{VERSION}/{FORMAT}/
+-- There will be one plot for each eta bin, energy value and layer
+Run it: python CompareExtrapWeights_True_vs_Prediction.py
+
+Make HTML page with all plots with MakeHTMLpage.py
+- Choose pages to create (Version+Particles)
+- Specify which particles were used during training for each version with Msg dict
+- Choose path were pages will be created with outPATH (example: /eos/user/{FIRSTLETTEROFUSERNAME}/{USERNAME}/www/

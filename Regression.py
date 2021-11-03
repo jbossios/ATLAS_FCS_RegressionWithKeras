@@ -7,26 +7,29 @@ import os,sys,argparse
 # DO NOT MODIFY (below this line)
 ##########################################################################################################
 
+AllowedActivationTypes = ['relu','tanh','linear','LeakyRelu']
+AllowedParticleTypes   = ['photons','electrons','pions','all','electronsANDphotons','pionsANDelectrons']
+
 ##########################################################################################################
 # Read arguments
 ##########################################################################################################
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--inputDataType',         action='store',      dest="inputDataType",                      help='Input data type')
-parser.add_argument('--particleType',          action='store',      dest="particleType",                       help='Particle type')
-parser.add_argument('--etaRange',              action='store',      dest="etaRange",                           help='|eta| range')
+parser.add_argument('--inputDataType',         action='store',      dest="inputDataType"     , default='Real', help='Input data type (default="Real")')
+parser.add_argument('--particleType',          action='store',      dest="particleType",                       help='Particle type (options: {})'.format([x for x in AllowedParticleTypes]))
+parser.add_argument('--etaRange',              action='store',      dest="etaRange",                           help='|eta| range (example: "0_5")')
 parser.add_argument('--outPATH',               action='store',      dest="outPATH",                            help='Output path')
-parser.add_argument('--activation',            action='store',      dest="activationType"    , default='relu', help='Layer activation type')
-parser.add_argument('--nEpochs',               action='store',      dest="nEpochs"           , default=200,    help='Number of epochs')
-parser.add_argument('--learningRate',          action='store',      dest="learningRate"      , default=0.001,  help='Learning rate')
-parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss')
-parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer')
-parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers')
-parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization')
-parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False,  help='Use preprocessing.Normalization layer')
-parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False,  help='Use EarlyStopping')
-parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useModelCheckpoint", default=False,  help='Use ModelCheckpoint')
-parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False,  help='Run in debug mode')
+parser.add_argument('--activation',            action='store',      dest="activationType"    , default='relu', help='Layer activation type (default="relu", options: {})'.format([x for x in AllowedActivationTypes]))
+parser.add_argument('--nEpochs',               action='store',      dest="nEpochs"           , default=200,    help='Number of epochs (default=200)')
+parser.add_argument('--learningRate',          action='store',      dest="learningRate"      , default=0.001,  help='Learning rate (default=0.001)')
+parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss (default="MSE", options: "MSE" [mean_squared_error] or "MAE" [mean_absolute_error])')
+parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer (default=100)')
+parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers (default=2)')
+parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization (default=False)')
+parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False,  help='Use preprocessing.Normalization layer (default=False)')
+parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False,  help='Use EarlyStopping (default=False)')
+parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useModelCheckpoint", default=False,  help='Use ModelCheckpoint (default=False)')
+parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False,  help='Run in debug mode (default=False)')
 args = parser.parse_args()
 
 InputDataType         = args.inputDataType
@@ -72,9 +75,11 @@ print('#########################################################################
 OutBaseName = '{}_{}'.format(config.InputDataType,config.ActivationType)
 
 # Protections
-AllowedActivationTypes = ['relu','tanh','linear','LeakyRelu']
 if config.ActivationType not in AllowedActivationTypes:
-  print('ERROR: ActivationType not recognized, exiting')
+  print('ERROR: ActivationType ({}) not recognized, exiting'.format(config.ActivationType))
+  sys.exit(1)
+if config.Particle not in AllowedParticleTypes:
+  print('ERROR: Particle ({}) not recognized, exiting')
   sys.exit(1)
 
 from InputFiles import PATH2InputFiles as PATHs

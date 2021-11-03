@@ -25,6 +25,9 @@ UseNormalizer         = False
 UseEarlyStopping      = True
 UseModelCheckpoint    = True
 
+# Choose where outputs will be saved
+OutPATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/'
+
 #######################################################################################################
 # DO NOT MODIFY (below this line)
 #######################################################################################################
@@ -46,7 +49,7 @@ for Version,Dict in Versions.items():
     EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]
 
   # Create output folder
-  outPATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/{}'.format(Version)
+  outPATH = OutPATH + Version
   os.system("mkdir {}".format(outPATH))
 
   # Prepare a single submission script for each eta bin

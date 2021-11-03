@@ -1,10 +1,12 @@
 #########################################################################################
+#                                                                                       #
 # Purpose: Make figures comparing true and predicted extrapolation weight distributions #
 # Author:  Jona Bossio (jbossios@cern.ch)                                               #
 # Usage:   python CompareExtrapWeights_True_vs_Prediction.py                            #
+#                                                                                       #
 #########################################################################################
 
-Particle = 'pions'
+Particle = 'pions' # options: photons, electrons and pions
 Version  = 'v10'
 Format   = 'png' # Format of output figures. Options: pdf, png (needed for making HTML pages)
 
