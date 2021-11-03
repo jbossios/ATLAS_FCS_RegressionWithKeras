@@ -1,32 +1,43 @@
+#########################################################################################
+#                                                                                       #
+# Purpose: Make figures comparing true and predicted extrapolation weight distributions #
+# Author:  Jona Bossio (jbossios@cern.ch)                                               #
+# Usage:   python CompareExtrapWeights_True_vs_Prediction.py                            #
+#                                                                                       #
+#########################################################################################
 
-Particle = 'pions'
+Particle = 'pions' # options: photons, electrons and pions
 Version  = 'v10'
-Format   = 'png' # options: pdf, png
+Format   = 'png' # Format of output figures. Options: pdf, png (needed for making HTML pages)
 
-################################################################
-# DO NOT MODIFY (below this line)
-################################################################
-
-VersionsWithPDGID = ['v13','v17','v18']
-VersionsWithPions = ['v13','v18']
-ParticlesInMultPartJobs = {
+VersionsWithPDGID = ['v13','v17','v18'] # versions for which I saved PDGID (all versions in which I trained using more than one particle)
+VersionsWithPions = ['v13','v18']       # versions in which I used more than one type of particle AND I used pions
+ParticlesInMultPartJobs = {             # Particles used in versions in which I trained with more than one particle
   'v13' : 'all',
   'v17' : 'electronsANDphotons',
   'v18' : 'pionsANDelectrons',
 }
 
+# Activation type used during training (output name depends on choice)
+Activation = 'relu' # NOTE: relu used upto v13, relu back again in v17 and so
+
+# Path to input models (outputs of condor jobs)
+PATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/{}/'.format(Version)
+
+################################################################
+# DO NOT MODIFY (below this line)
+################################################################
+
+# Eta binning
 if Particle == 'photons' or Particle == 'electrons':
   EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
 elif Particle == 'pions':
   EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]
 else:
-  print('ERROR: {} not supported yet, exiting'.format(Particle))
+  print(f'ERROR: {Particle} not supported yet, exiting')
   sys.exit(1)
 
-Activation                = 'relu' # relu used upto v13, relu back again in v17 and so
 NormalizationLayerInModel = True if Version == 'v01' else False
-
-PATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/{}/'.format(Version)
 
 ###############################
 # Create output folders
@@ -38,21 +49,24 @@ os.system('mkdir Plots/{}/{}'.format(Particle,Version))
 FORMAT = 'PDF' if Format == 'pdf' else 'PNG'
 os.system('mkdir Plots/{}/{}/{}'.format(Particle,Version,FORMAT))
 
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from HelperFunctions import *
+from tensorflow import keras
+from tensorflow.keras.layers.experimental import preprocessing
+
+sys.path.insert(1, '../') # insert at 1, 0 is the script path
+from InputFiles import PATH2InputFiles as PATHs
+
 ##########################
 # Loop over eta bins
 ##########################
 for EtaBin in EtaBins:
 
   OutBaseName = 'Real_{}_{}_{}'.format(Activation,Particle,EtaBin)
-  
-  import numpy as np
-  import pandas as pd
-  import tensorflow as tf
-  import matplotlib.pyplot as plt
-  from HelperFunctions import *
-  from tensorflow import keras
-  from tensorflow.keras.layers.experimental import preprocessing
-  
+
   ###############################
   # Get model
   ###############################
@@ -78,29 +92,14 @@ for EtaBin in EtaBins:
   header    += ['etrue']
   if Version in VersionsWithPDGID:
     header    += ['pdgId']
-  InputFiles = dict()
-  path       = ''
-  if Version == 'v13':
-    path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v4/'
-  elif Version == 'v17':
-    path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons_and_photons/v1/'
-  elif Version == 'v18':
-    path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons/v1/'
-  else: # other versions using a single particle as inputs
-    if Particle == 'photons':
-      if Version == 'v01':
-        path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v3/'
-      elif Version == 'v07':
-        path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v6/'
-      else: # v08 or later
-        path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v7/'
-    elif Particle == 'pions':
-      path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/v3/'
-    elif Particle == 'electrons':
-      path = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons/phiCorrected/'
-  if not path: # empty
-    print('ERROR: {}+{} combination not supported yet, exiting'.format(Particle,Version))
+  # Get path to input files
+  Particles = ParticlesInMultPartJobs[Version] if Version in ParticlesInMultPartJobs else Particle
+  try:
+    path = PATHs[Particles]
+  except KeyError:
+    print(f'{Particles} is not available in PATH2InputFiles from ../InputFiles.py, exiting')
     sys.exit(1)
+  InputFiles = dict()
   for File in os.listdir(path):
     if 'eta_{}'.format(EtaBin) not in File: continue # select only files for the requested eta bin
     pid = {'photons':'pid22', 'pions':'pid211', 'electrons':'pid11'}[Particle]
@@ -135,7 +134,7 @@ for EtaBin in EtaBins:
     elif Particle == 'electrons':
       if 'pid11_' not in File: continue
     else:
-      print('{} not supported yet, exiting'.format(Particle))
+      print(f'{Particle} not supported yet, exiting')
       sys.exit(1)
     Energy = File.split('E')[1].split('_')[0]
     InputFiles[Energy] = path+File
@@ -157,7 +156,7 @@ for EtaBin in EtaBins:
     elif Particle == 'electrons':
       if 'pid11_' not in Folder: continue
     else:
-      print('{} not supported yet, exiting'.format(Particle))
+      print(f'{Particle} not supported yet, exiting')
       sys.exit(1)
     if 'eta'+EtaBin.split('_')[0] not in Folder: continue # select only files for the requested eta bin
     Folder += '/'
@@ -168,14 +167,14 @@ for EtaBin in EtaBins:
       Matrices[Energy] = File.Get('tm_mean_weight')
   
   # Get weight from matrix
-  def getWeight(row,e,layer):
+  def getWeight(row:pd.core.series.Series,e:str,layer:int) -> float:
     return Matrices[e](layer,int(row['firstPCAbin']))
-  
+
   # Update each DF adding weight_x for each layer
   for energy in FCSDFs:
     for layer in Layers:
       FCSDFs[energy]['extrapWeight_{}'.format(layer)] = FCSDFs[energy].apply(lambda row: getWeight(row,energy,layer), axis=1)
-  
+
   FCSenergies = [energy for energy in FCSDFs]
   
   # Protection
@@ -198,7 +197,7 @@ for EtaBin in EtaBins:
     Nfeatures  = len(features)
     Nlabels    = len(labels)
     if energy not in DFs:
-      print('WARNING: skipping energy {}'.format(energy))
+      print(f'WARNING: skipping energy {energy}')
       continue
     dataset               = DFs[energy]
     FCSdataset            = FCSDFs[energy]
@@ -208,45 +207,15 @@ for EtaBin in EtaBins:
     weights_FCS           = FCSdataset[labels].copy().values.reshape(-1,Nlabels)
     pred                  = model.predict(Features_dataset)
     counter = 0
-    # Make figure
-    #Diffs   = pred-Labels_dataset
-    #FCSdiff = weights_FCS-Labels_dataset
     for Label in labels:
       counter_energy = 5 if Particle == 'photons' or Particle == 'electrons' else 7 # column number with truth energy
       nndiff  = np.array([pred[i,counter]-Labels_dataset[i,counter] for i in range(pred[:,counter].size) if LayerEnergies_dataset[i,counter] > 100])
       fcsdiff = np.array([weights_FCS[i,counter]-Labels_dataset[i,counter] for i in range(pred[:,counter].size) if LayerEnergies_dataset[i,counter] > 100])
       if nndiff.size == 0: continue # skip
 
-      # left just in case
-      #plt.figure('true_vs_prediction_{}'.format(Label))
-      ## Create canvas with two panels 
-      #fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=False)
-      ## Plot prediction and true distributions
-      #valsTrue, binsTrue, patchesTrue = axes[0].hist(Labels_dataset[:,counter],label=Label+' true',bins=50)
-      #valsPred, binsPred, patchesPred = axes[0].hist(pred[:,counter],label=Label+' prediction',bins=50,alpha=0.5)
-      #axes[0].legend()
-      ## Calculate and plot prediction/true ratio
-      #ratio = np.divide(valsPred,valsTrue)
-      #ratio[ratio == np.inf] = 0
-      #ratio[np.isnan(ratio)] = 0
-      #centers = [] # bin centers
-      #for ibin in range(0,len(binsTrue)-1):
-      #  center = 0.5*(binsTrue[ibin+1]-binsTrue[ibin])+binsTrue[ibin]
-      #  centers.append(center)
-      #axes[1].plot(centers,ratio)
-      ## Plot line at one
-      #axes[1].plot(centers,[1 for i in range(len(centers))],'--',color='k')
-      #axes[1].set_ylabel('Prediction/True')
-      ## Set y-axis range
-      #plt.ylim([0,3.5])
-      ## Save figure
-      #plt.savefig('Plots/{}/{}/eta{}_E{}_{}_true_vs_prediction_{}.pdf'.format(Particle,Version,EtaBin,energy,OutBaseName,Label))
-
       # Plot now the distribution of prediction-true and FCS-true
       plt.figure('TruePredictionDiff_{}'.format(Label))
       ax = plt.gca()
-      #nKeras, binsKeras, _ = plt.hist(Diffs[:,counter],bins=binning,label='NN')
-      #nFCS, binsFCS, _     = plt.hist(FCSdiff[:,counter],bins=binning,label='FCS',color='r',alpha=0.5)
       nKeras, binsKeras, _ = plt.hist(nndiff,bins=binning,label='NN')
       nFCS, binsFCS, _     = plt.hist(fcsdiff,bins=binning,label='FCS',color='r',alpha=0.5)
       plt.xlim([-0.75,0.75])

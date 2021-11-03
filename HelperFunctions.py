@@ -12,4 +12,3 @@ def plot_loss(history,outPATH,extra,loss):
   plt.legend()
   plt.grid(True)
   plt.savefig('{}/{}_loss_vs_epochs.pdf'.format(outPATH,extra))
-

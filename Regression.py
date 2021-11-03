@@ -7,26 +7,29 @@ import os,sys,argparse
 # DO NOT MODIFY (below this line)
 ##########################################################################################################
 
+AllowedActivationTypes = ['relu','tanh','linear','LeakyRelu']
+AllowedParticleTypes   = ['photons','electrons','pions','all','electronsANDphotons','pionsANDelectrons']
+
 ##########################################################################################################
 # Read arguments
 ##########################################################################################################
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--inputDataType',         action='store',      dest="inputDataType",                      help='Input data type')
-parser.add_argument('--particleType',          action='store',      dest="particleType",                       help='Particle type')
-parser.add_argument('--etaRange',              action='store',      dest="etaRange",                           help='|eta| range')
+parser.add_argument('--inputDataType',         action='store',      dest="inputDataType"     , default='Real', help='Input data type (default="Real")')
+parser.add_argument('--particleType',          action='store',      dest="particleType",                       help='Particle type (options: {})'.format([x for x in AllowedParticleTypes]))
+parser.add_argument('--etaRange',              action='store',      dest="etaRange",                           help='|eta| range (example: "0_5")')
 parser.add_argument('--outPATH',               action='store',      dest="outPATH",                            help='Output path')
-parser.add_argument('--activation',            action='store',      dest="activationType"    , default='relu', help='Layer activation type')
-parser.add_argument('--nEpochs',               action='store',      dest="nEpochs"           , default=200,    help='Number of epochs')
-parser.add_argument('--learningRate',          action='store',      dest="learningRate"      , default=0.001,  help='Learning rate')
-parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss')
-parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer')
-parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers')
-parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization')
-parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False,  help='Use preprocessing.Normalization layer')
-parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False,  help='Use EarlyStopping')
-parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useModelCheckpoint", default=False,  help='Use ModelCheckpoint')
-parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False,  help='Run in debug mode')
+parser.add_argument('--activation',            action='store',      dest="activationType"    , default='relu', help='Layer activation type (default="relu", options: {})'.format([x for x in AllowedActivationTypes]))
+parser.add_argument('--nEpochs',               action='store',      dest="nEpochs"           , default=200,    help='Number of epochs (default=200)')
+parser.add_argument('--learningRate',          action='store',      dest="learningRate"      , default=0.001,  help='Learning rate (default=0.001)')
+parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss (default="MSE", options: "MSE" [mean_squared_error] or "MAE" [mean_absolute_error])')
+parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer (default=100)')
+parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers (default=2)')
+parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization (default=False)')
+parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False,  help='Use preprocessing.Normalization layer (default=False)')
+parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False,  help='Use EarlyStopping (default=False)')
+parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useModelCheckpoint", default=False,  help='Use ModelCheckpoint (default=False)')
+parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False,  help='Run in debug mode (default=False)')
 args = parser.parse_args()
 
 InputDataType         = args.inputDataType
@@ -72,10 +75,14 @@ print('#########################################################################
 OutBaseName = '{}_{}'.format(config.InputDataType,config.ActivationType)
 
 # Protections
-AllowedActivationTypes = ['relu','tanh','linear','LeakyRelu']
 if config.ActivationType not in AllowedActivationTypes:
-  print('ERROR: ActivationType not recognized, exiting')
+  print('ERROR: ActivationType ({}) not recognized, exiting'.format(config.ActivationType))
   sys.exit(1)
+if config.Particle not in AllowedParticleTypes:
+  print('ERROR: Particle ({}) not recognized, exiting')
+  sys.exit(1)
+
+from InputFiles import PATH2InputFiles as PATHs
 
 # Get data
 print('INFO: Get data')
@@ -99,23 +106,13 @@ elif config.InputDataType == 'Real':
   header    += ['etrue']
   if config.Particle=='all' or config.Particle=='electronsANDphotons' or config.Particle=='pionsANDelectrons':
     header    += ['pdgId']
-  InputFiles = []
-  if config.Particle == 'photons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/photons/v7/' # normalized inputs
-  elif config.Particle == 'pions':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions/v3/' # normalized inputs (using non-phiCorrected files)
-  elif config.Particle == 'electrons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons/phiCorrected/' # normalized inputs
-  elif config.Particle == 'all':
-    #PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v1/' # w/o pdgId
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons_and_photons/v4/' # w/  pdgId
-  elif config.Particle == 'electronsANDphotons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/electrons_and_photons/v1/'
-  elif config.Particle == 'pionsANDelectrons':
-    PATH = '/eos/user/j/jbossios/FastCaloSim/MicheleInputsCSV/pions_and_electrons/v1/'
-  else:
-    print('ERROR: {} not supported yet, exiting'.format(config.Particle))
+  # Get path to input files
+  try:
+    PATH = PATHs[config.Particle]
+  except KeyError:
+    print(f'{config.Particle} is not available in PATH2InputFiles from InputFiles.py, exiting')
     sys.exit(1)
+  InputFiles = []
   for File in os.listdir(PATH):
     if '.csv' not in File or 'eta_{}'.format(config.EtaRange) not in File: continue # Select only files for the requested eta bin
     InputFiles.append(PATH+File)
@@ -131,7 +128,7 @@ import pandas as pd
 if Debug: print('DEBUG: Read each CSV file and create a single DF')
 DFs = []
 for InputFile in InputFiles:
-  print('INFO: Reading {}'.format(InputFile))
+  print(f'INFO: Reading {InputFile}')
   raw_dataset = pd.read_csv(InputFile, names=header, na_values='?', comment='\t', sep=',', skiprows=[0] , skipinitialspace=True)
   DFs.append(raw_dataset.copy())
 if len(DFs) == 0:
@@ -148,7 +145,7 @@ print('INFO: Split data into train and test')
 train_dataset = dataset.sample(frac=0.8, random_state=0)
 test_dataset  = dataset.drop(train_dataset.index)
 
-## Plot correlations (takes too much time)
+## Plot correlations (takes too much time, left in case of need)
 #import seaborn as sns
 #print('INFO: Plot variable distributions')
 #plt.figure('correlation')
@@ -202,8 +199,8 @@ else: # LeakyRelu
 model.add(tf.keras.layers.Dense(Nlabels))
 model.summary()
 tf.keras.utils.plot_model(model, to_file='{}/model_{}_{}.png'.format(config.outPATH,config.Particle,config.EtaRange), show_shapes=True)
-#for layer in model.layers:
-#  print('layer name: {}'.format(layer.name))
+#for layer in model.layers: # left in case of need
+#  print(f'layer name: {layer.name}')
 #  print(layer.get_weights())
 
 # Compile model
@@ -289,6 +286,6 @@ print(test_results)
 
 # Print epoch at which the training stopped
 if config.UseEarlyStopping:
-  print('Trainning stopped at epoch = {}'.format(ES.stopped_epoch))
+  print(f'Trainning stopped at epoch = {ES.stopped_epoch}')
 
 print('>>> ALL DONE <<<')
