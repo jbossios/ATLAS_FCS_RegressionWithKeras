@@ -5,10 +5,10 @@
 #                                                  #
 ####################################################
 
-Version  = 'v22'
-Particle = 'electronsANDphotons'
-Test     = False
-BasePATH = "/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/" # output path
+Version  = 'v24'
+Particle = 'electrons'
+Test     = True
+BasePATH = "/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Condor_Outputs/" # output path
 
 ######################################################################
 ## DO NOT MODIFY

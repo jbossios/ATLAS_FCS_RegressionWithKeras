@@ -66,7 +66,7 @@ The above will produce *FilesForSubmission.tar.gz*
 Prepare condor submission scripts with *PrepareCondorSubmissionScripts.py*:
 
 - Choose the hyperparameters of the DNN
-- It is possible to run different 'versions', each using a different set of particles
+- It is possible to run different 'versions', each using a different set of particles and hyperparameters
 - Choose where outputs will be saved with *OutPATH*
  
 Run it:
@@ -97,7 +97,7 @@ Prepare condor submission scripts with *PrepareCondorSubmissionScripts_forOptimi
 
 And submit condor jobs with *Submit_Optimization.py*
 
-Example script for making plots to find optimal hyperparameters: *HyperparameterOptimization/FindOptimal_v3.py*
+Example script for making plots to find optimal hyperparameters: *HyperparameterOptimization/FindOptimal.py*
 
 ## Compare predicted-true extrapolation weight distribution b/w trained network and FCS (optional)
 
