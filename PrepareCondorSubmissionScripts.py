@@ -10,15 +10,15 @@ Versions = {
 #  'v16' : {'Particle' : 'electrons'},
 #  'v17' : {'Particle' : 'electronsANDphotons'},
 #  'v18' : {'Particle' : 'pionsANDelectrons'},
-  'v19' : {'Particle' : 'photons'},
-  'v20' : {'Particle' : 'electrons'},
-  'v21' : {'Particle' : 'pions'},
-  'v22' : {'Particle' : 'electronsANDphotons'},
+#  'v19' : {'Particle' : 'photons'},
+#  'v20' : {'Particle' : 'electrons'},
+#  'v21' : {'Particle' : 'pions'},
+#  'v22' : {'Particle' : 'electronsANDphotons'},
+  'v23' : {'Particle' : 'photons',   'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 30, 'Nlayers' : 2},
+  'v24' : {'Particle' : 'electrons', 'ActivationType' : 'relu', 'LearningRate' : 0.0001, 'Nnodes' : 40, 'Nlayers' : 2},
+  'v25' : {'Particle' : 'pions',     'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 40, 'Nlayers' : 2},
 }
-ActivationType        = 'relu' # Options: relu, tanh, linear, LeakyRelu
 Nepochs               = 200
-LearningRate          = 0.0001
-NnodesHiddenLayers    = 80
 Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
 UseBatchNormalization = False
 UseNormalizer         = False
@@ -26,7 +26,7 @@ UseEarlyStopping      = True
 UseModelCheckpoint    = True
 
 # Choose where outputs will be saved
-OutPATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/'
+OutPATH = '/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Condor_Outputs/'
 
 #######################################################################################################
 # DO NOT MODIFY (below this line)
@@ -40,7 +40,11 @@ os.system("mkdir SubmissionScripts")
 
 # Loop over versions
 for Version,Dict in Versions.items():
-  Particle = Dict['Particle']
+  Particle           = Dict['Particle']
+  ActivationType     = Dict['ActivationType'] # other options: relu, tanh, linear, LeakyRelu
+  LearningRate       = Dict['LearningRate']
+  NnodesHiddenLayers = Dict['Nnodes']
+  Nlayers            = Dict['Nlayers']
 
   # Supported eta bins
   if 'photons' in Particle or 'electrons' in Particle or Particle == 'all':
@@ -83,6 +87,7 @@ for Version,Dict in Versions.items():
     command += " --learningRate "+str(LearningRate)
     command += " --loss "+Loss
     command += " --nNodes "+str(NnodesHiddenLayers)
+    command += " --nLayers "+str(Nlayers)
     if UseBatchNormalization: command += " --useBatchNormalization"
     if UseNormalizer:         command += " --useNormalizationLayer"
     if UseEarlyStopping:      command += " --useEarlyStopping"

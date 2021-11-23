@@ -29,3 +29,12 @@ v20: Training electrons using set of parameters which give better performance fo
 v21: Training pions using set of parameters which give better performance for photons in eta_20_25
 
 v22: Training electrons and photons using set of parameters which give better performance for photons in eta_20_25
+
+###################################
+# Hyperparameter optimization
+###################################
+
+v4: sending missing jobs from v3 and assigning correctly each job to corresponding set of parameters
+v5: same as v4 but for electrons
+v6: same as v4 but for pions
+

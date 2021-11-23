@@ -4,8 +4,8 @@
 ####################################################################################################
 
 # Choose settings
-Version               = 'HyperparameterOptimization_v3'
-Particle              = 'photons'
+Version               = 'HyperparameterOptimization_v5'
+Particle              = 'electrons'
 Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
 Nepochs               = 200
 etabin                = '20_25'
@@ -13,6 +13,9 @@ UseBatchNormalization = False
 UseNormalizer         = False
 UseEarlyStopping      = True
 UseModelCheckpoint    = True
+
+# Choose where outputs will be saved
+OutPATH = '/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Condor_Outputs/'
 
 #######################################################################################################
 # DO NOT MODIFY (below this line)
@@ -41,7 +44,7 @@ for iActType in range(0,len(Params['ActivationType'])):
         Nlayers = Params['Nlayers'][iLayers]
         counter += 1
         # Create output folder
-        outPATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/{}/{}'.format(Version,counter)
+        outPATH = '{}/{}/{}'.format(OutPATH,Version,counter)
         os.system("mkdir -p {}".format(outPATH))
         # Prepare submission script
         ScriptName = '{}_{}_0{}'.format(Particle,etabin,counter) if counter < 10 else '{}_{}_{}'.format(Particle,etabin,counter)

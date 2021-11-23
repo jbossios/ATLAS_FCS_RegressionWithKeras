@@ -1,13 +1,27 @@
 
-Version = 'HyperparameterOptimization_v3'
+Versions = { # version : particle
+  'v4' : 'photons',
+  'v5' : 'electrons',
+  'v6' : 'pions',
+}
+
+version = 'v5'
+
+basePATH = '/afs/cern.ch/user/j/jbossios/work/public/FastCaloSim/Keras_Multipurpose_Regression/RegressionWithKeras/Logs/'
 
 ########################################################################
 # DO NOT MODIFY (below this line)
 ########################################################################
 
+Particle = Versions[version]
+
+Version = 'HyperparameterOptimization_{}'.format(version)
+
 import os,sys
 
-basePATH = '/afs/cern.ch/user/j/jbossios/work/public/FastCaloSim/Keras_Multipurpose_Regression/RegressionWithKeras/Logs/'
+OutputPATH = 'Plots/{}/'.format(version)
+if not os.path.exists(OutputPATH):
+  os.makedirs(OutputPATH)
 
 # Loop over log files
 MinLoss     = 1E9
@@ -17,10 +31,11 @@ ValLosses   = dict()
 for File in os.listdir(basePATH+Version):
   if '.out' not in File: continue # skip non-log files
   # identify hyperparameter combination number
-  Iter = int(File.split('.')[0].replace('photons_20_25_',''))
+  Iter = int(File.split('.')[0].replace('{}_20_25_'.format(Particle),''))
   # Read test_loss
   iFile            = open(basePATH+Version+'/'+File,'r')
   Lines            = iFile.readlines()
+  if version == 'v5' and Iter == 896: continue # skip job that crashes (loss is too large anyway for this combination) Temporary
   test_loss        = float(Lines[len(Lines)-3].split(',')[0].replace('[',''))
   TestLosses[Iter] = test_loss
   # Read val_loss
@@ -59,6 +74,10 @@ for iActType in range(0,len(Params['ActivationType'])):
           print('Nlayers        = {}'.format(OptimalNlayers))
           break
 
+# Forcing optional n nodes to 40 for v5
+if version == 'v5':
+  OptimalNnodes = 80
+
 #######################################################################
 # Plot loss vs Learning rate for optimal ActivationType/Nnodes/Nlayers
 #######################################################################
@@ -79,7 +98,7 @@ for iActType in range(0,len(Params['ActivationType'])):
         LearningRate   = Params['LearningRate'][iLearningRate]
         Nnodes         = Params['Nnodes'][iNodes]
         Nlayers        = Params['Nlayers'][iLayers]
-	if ActivationType==OptimalActivationType and Nnodes==OptimalNnodes and Nlayers==OptimalNlayers:
+        if ActivationType==OptimalActivationType and Nnodes==OptimalNnodes and Nlayers==OptimalNlayers:
           CombinationsOfInterest['{}_{}_{}'.format(OptimalActivationType,OptimalNnodes,OptimalNlayers)][LearningRate] = counter
 
 # Plot loss vs learning rate for optimal ActivationType,Nnodes,Nlayers
@@ -88,8 +107,6 @@ x = [key for key in CombinationsOfInterest[Combination]]
 x.sort()
 yTest = [TestLosses[CombinationsOfInterest[Combination][key]] for key in x]
 yVal  = [ValLosses[CombinationsOfInterest[Combination][key]] for key in x]
-#TestValues = { key : TestLosses[CombinationsOfInterest['{}_{}'.format(OptimalActivationType,OptimalLearningRate)][key]] for key in CombinationsOfInterest['{}_{}'.format(OptimalActivationType,OptimalLearningRate)]}
-#ValValues  = { key : ValLosses[CombinationsOfInterest['{}_{}'.format(OptimalActivationType,OptimalLearningRate)][key]]  for key in CombinationsOfInterest['{}_{}'.format(OptimalActivationType,OptimalLearningRate)]}
 import matplotlib.pyplot as plt
 plt.figure('loss_vs_LearningRate')
 ax = plt.gca()
@@ -101,7 +118,7 @@ plt.xscale('log')
 ax.text(0.02, 0.95, 'ActivationType,Nnodes,Nlayers: {},{},{}'.format(OptimalActivationType,OptimalNnodes,OptimalNlayers), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes,fontsize=12)
 plt.xlabel('Learning rate')
 plt.ylabel('Loss')
-plt.savefig('Plots/v3/loss_vs_LearningRate.pdf')
+plt.savefig('{}/loss_vs_LearningRate.pdf'.format(OutputPATH))
 plt.close('all')
 
 ##################################################################################
@@ -124,7 +141,7 @@ for iActType in range(0,len(Params['ActivationType'])):
         LearningRate   = Params['LearningRate'][iLearningRate]
         Nnodes         = Params['Nnodes'][iNodes]
         Nlayers        = Params['Nlayers'][iLayers]
-	if ActivationType==OptimalActivationType and LearningRate==OptimalLearningRate:
+        if ActivationType==OptimalActivationType and LearningRate==OptimalLearningRate:
           CombinationsOfInterest['{}_{}'.format(OptimalActivationType,OptimalLearningRate)][Nnodes+Nlayers] = counter
 
 # Plot loss vs Nnodes+Nlayers for optimal ActivationType,Learning
@@ -144,16 +161,16 @@ plt.legend()
 ax.text(0.02, 0.95, 'ActivationType,LearningRate: {},{}'.format(OptimalActivationType,OptimalLearningRate), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes,fontsize=12)
 plt.xlabel('Number of nodes + layers')
 plt.ylabel('Loss')
-plt.savefig('Plots/v3/loss_vs_NnodesPlusNlayers.pdf')
+plt.savefig('{}/loss_vs_NnodesPlusNlayers.pdf'.format(OutputPATH))
 plt.close('all')
 
 ##################################################################################
-# Plot loss vs Nlayers (for Nnodes=80)
+# Plot loss vs Nlayers (for Nnodes=OptimalNnodes)
 ##################################################################################
 
 # collect info
 counter = 0
-CombinationsOfInterest = {'{}_{}_80'.format(OptimalActivationType,OptimalLearningRate):{}}
+CombinationsOfInterest = {'{}_{}_{}'.format(OptimalActivationType,OptimalLearningRate,OptimalNnodes):{}}
 # Loop over values for ActivationType
 for iActType in range(0,len(Params['ActivationType'])):
   # Loop over values for LearningRate
@@ -167,17 +184,17 @@ for iActType in range(0,len(Params['ActivationType'])):
         LearningRate   = Params['LearningRate'][iLearningRate]
         Nnodes         = Params['Nnodes'][iNodes]
         Nlayers        = Params['Nlayers'][iLayers]
-	if ActivationType==OptimalActivationType and LearningRate==OptimalLearningRate and Nnodes==80:
-          CombinationsOfInterest['{}_{}_80'.format(OptimalActivationType,OptimalLearningRate)][Nlayers] = counter
+        if ActivationType==OptimalActivationType and LearningRate==OptimalLearningRate and Nnodes==OptimalNnodes:
+          CombinationsOfInterest['{}_{}_{}'.format(OptimalActivationType,OptimalLearningRate,OptimalNnodes)][Nlayers] = counter
 
 # Plot loss vs Nnodes+Nlayers for optimal ActivationType,Learning
-Combination = '{}_{}_80'.format(OptimalActivationType,OptimalLearningRate)
+Combination = '{}_{}_{}'.format(OptimalActivationType,OptimalLearningRate,OptimalNnodes)
 x = [key for key in CombinationsOfInterest[Combination]]
 x.sort()
 yTest = [TestLosses[CombinationsOfInterest[Combination][key]] for key in x]
 yVal  = [ValLosses[CombinationsOfInterest[Combination][key]] for key in x]
 import matplotlib.pyplot as plt
-plt.figure('loss_vs_Nlayers_Nnodes80')
+plt.figure('loss_vs_Nlayers_Nnodes{}'.format(OptimalNnodes))
 ax = plt.gca()
 plt.plot(x,yTest, label='test_loss')
 plt.plot(x,yVal, label='val_loss')
@@ -187,7 +204,7 @@ plt.legend()
 ax.text(0.02, 0.95, 'ActivationType,LearningRate: {},{}'.format(OptimalActivationType,OptimalLearningRate), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes,fontsize=12)
 plt.xlabel('Number of hidden layers')
 plt.ylabel('Loss')
-plt.savefig('Plots/v3/loss_vs_Nlayers_Nnodes80.pdf')
+plt.savefig('{}/loss_vs_Nlayers_Nnodes{}.pdf'.format(OutputPATH,OptimalNnodes))
 plt.close('all')
 
 
@@ -233,6 +250,6 @@ for N in range(1,5):
   ax.text(0.02, 0.95, 'ActivationType,LearningRate,Nlayers: {},{}'.format(OptimalActivationType,OptimalLearningRate,N), verticalalignment='top', horizontalalignment='left', transform=ax.transAxes,fontsize=12)
   plt.xlabel('Number of nodes')
   plt.ylabel('Loss')
-  plt.savefig('Plots/v3/loss_vs_Nnodes_Nlayers{}.pdf'.format(N))
+  plt.savefig('{}/loss_vs_Nnodes_Nlayers{}.pdf'.format(OutputPATH,N))
   plt.close('all')
 
