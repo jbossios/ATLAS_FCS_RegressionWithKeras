@@ -65,8 +65,7 @@ The above will produce *FilesForSubmission.tar.gz*
 
 Prepare condor submission scripts with *PrepareCondorSubmissionScripts.py*:
 
-- Choose the hyperparameters of the DNN
-- It is possible to run different 'versions', each using a different set of particles and hyperparameters
+- It is possible to run different 'versions', each using a different set of particles and hyperparameters of the DNN
 - Choose where outputs will be saved with *OutPATH*
  
 Run it:
