@@ -22,7 +22,7 @@ ParticlesInMultPartJobs = {             # Particles used in versions in which I 
 Activation = 'relu' # NOTE: relu used upto v13, relu back again in v17 and so
 
 # Path to input models (outputs of condor jobs)
-PATH = '/eos/user/j/jbossios/FastCaloSim/Regression_Condor_Outputs/{}/'.format(Version)
+PATH = '/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Condor_Outputs/{}/'.format(Version)
 
 ################################################################
 # DO NOT MODIFY (below this line)
