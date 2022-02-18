@@ -4,11 +4,11 @@
 ####################################################################################################
 
 # Choose settings
-Version               = 'HyperparameterOptimization_v5'
-Particle              = 'electrons'
+Version               = 'HyperparameterOptimization_v13'
+Particle              = 'photons'
 Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
 Nepochs               = 200
-etabin                = '20_25'
+etabin                = '400_405'
 UseBatchNormalization = False
 UseNormalizer         = False
 UseEarlyStopping      = True
@@ -26,8 +26,10 @@ import os,sys
 from HyperParametersToOptimize import HyperParameters as Params
 
 # Create folder for submission scripts
-os.system("rm SubmissionScripts/*")
-os.system("mkdir SubmissionScripts")
+if not os.path.exists('SubmissionScripts/'):
+  os.makedirs('SubmissionScripts')
+else:
+  os.system("rm SubmissionScripts/{}_{}*".format(Particle, etabin))
 
 counter = 0
 # Loop over values for ActivationType

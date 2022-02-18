@@ -14,9 +14,13 @@ Versions = {
 #  'v20' : {'Particle' : 'electrons'},
 #  'v21' : {'Particle' : 'pions'},
 #  'v22' : {'Particle' : 'electronsANDphotons'},
-  'v23' : {'Particle' : 'photons',   'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 30, 'Nlayers' : 2},
-  'v24' : {'Particle' : 'electrons', 'ActivationType' : 'relu', 'LearningRate' : 0.0001, 'Nnodes' : 40, 'Nlayers' : 2},
-  'v25' : {'Particle' : 'pions',     'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 40, 'Nlayers' : 2},
+#  'v23' : {'Particle' : 'photons',   'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 30, 'Nlayers' : 2},
+#  'v24' : {'Particle' : 'electrons', 'ActivationType' : 'relu', 'LearningRate' : 0.0001, 'Nnodes' : 40, 'Nlayers' : 2},
+#  'v25' : {'Particle' : 'pions',     'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 40, 'Nlayers' : 2},
+#  'v26' : {'Particle' : 'electronsANDphotons', 'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 30, 'Nlayers' : 2},
+#  'v27' : {'Particle' : 'pionsANDelectrons',   'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 40, 'Nlayers' : 3},
+#  'v28' : {'Particle' : 'pions',   'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 40, 'Nlayers' : 3},
+  'v29' : {'Particle' : 'all',   'ActivationType' : 'relu', 'LearningRate' : 0.0001, 'Nnodes' : 100, 'Nlayers' : 2},
 }
 Nepochs               = 200
 Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
@@ -47,10 +51,11 @@ for Version,Dict in Versions.items():
   Nlayers            = Dict['Nlayers']
 
   # Supported eta bins
-  if 'photons' in Particle or 'electrons' in Particle or Particle == 'all':
-    EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
-  elif Particle == 'pions':
-    EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]
+  EtaBins = ['{}_{}'.format(x*5, x*5+5) for x in range(100)] # full detector
+  #if 'photons' in Particle or 'electrons' in Particle or Particle == 'all':
+  #  EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
+  #elif Particle == 'pions':
+  #  EtaBins = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]
 
   # Create output folder
   outPATH = OutPATH + Version
