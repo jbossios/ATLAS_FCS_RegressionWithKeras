@@ -84,6 +84,25 @@ if config.Particle not in AllowedParticleTypes:
 
 from InputFiles import PATH2InputFiles as PATHs
 
+def get_layers(particle, eta_bin):
+  layers_dict = {
+    'photons' : {'3_1_0_12_2': 'eta_0_130', '3_1_0_17_2': 'eta_130_135', '4_5_18_3_1_0_6_17_2': 'eta_135_145', '4_5_18_1_0_6_17_2': 'eta_145_150', '4_5_6_17': 'eta_150_160', '4_5_6_7_8': 'eta_160_300', '21_23_6_7_22_8': 'eta_300_500'},
+    'electrons' : {'3_1_0_12_2': 'eta_0_130', '3_1_0_17_2': 'eta_130_135', '4_5_18_3_1_0_6_17_2': 'eta_135_145', '4_5_18_1_0_6_17_2': 'eta_145_150', '4_5_6_17': 'eta_150_160', '4_5_6_7_8': 'eta_160_300', '21_23_6_7_22_8': 'eta_300_500'},
+    'electronsANDphotons' : {'3_1_0_12_2': 'eta_0_130', '3_1_0_17_2': 'eta_130_135', '4_5_18_3_1_0_6_17_2': 'eta_135_145', '4_5_18_1_0_6_17_2': 'eta_145_150', '4_5_6_17': 'eta_150_160', '4_5_6_7_8': 'eta_160_300', '21_23_6_7_22_8': 'eta_300_500'},
+    'pions' : {'3_1_0_12_14_2_13': 'eta_0_90', '20_18_19_3_1_17_0_12_14_2_13_16_15': 'eta_90_130', '20_18_3_6_7_2_15_4_19_1_14_12_13_16_5_0_17_9_8': 'eta_130_150', '4_9_5_11_18_19_6_10_7_17_8': 'eta_150_170', '4_9_5_11_18_6_10_7_8': 'eta_170_240', '4_9_5_11_6_10_7_8': 'eta_240_280', '4_9_5_11_21_23_6_10_7_22_8': 'eta_280_350', '22_23_21': 'eta_350_500'},
+    'pionsANDelectrons' : {'3_1_0_12_14_2_13': 'eta_0_90', '20_18_19_3_1_17_0_12_14_2_13_16_15': 'eta_90_130', '20_18_3_6_7_2_15_4_19_1_14_12_13_16_5_0_17_9_8': 'eta_130_150', '4_9_5_11_18_19_6_10_7_17_8': 'eta_150_170', '4_9_5_11_18_6_10_7_8': 'eta_170_240', '4_9_5_11_6_10_7_8': 'eta_240_280', '4_9_5_11_21_23_6_10_7_22_8': 'eta_280_350', '22_23_21_6_7_8': 'eta_350_500'},
+    'all' : {'3_1_0_12_14_2_13': 'eta_0_90', '20_18_19_3_1_17_0_12_14_2_13_16_15': 'eta_90_130', '20_18_3_6_7_2_15_4_19_1_14_12_13_16_5_0_17_9_8': 'eta_130_150', '4_9_5_11_18_19_6_10_7_17_8': 'eta_150_170', '4_9_5_11_18_6_10_7_8': 'eta_170_240', '4_9_5_11_6_10_7_8': 'eta_240_280', '4_9_5_11_21_23_6_10_7_22_8': 'eta_280_350', '22_23_21_6_7_8': 'eta_350_500'},
+  }[particle]
+  eta_min = int(eta_bin.split('_')[1])
+  eta_max = int(eta_bin.split('_')[2])
+  for key, eta_range in layers_dict.items():
+    min_range = int(eta_range.split('_')[1])
+    max_range = int(eta_range.split('_')[2])
+    if eta_min >= min_range and eta_max <= max_range:
+      layers = list(set([int(item) for item in key.split('_')]))
+      return list(set([int(item) for item in key.split('_')]))
+  return []
+
 # Get data
 print('INFO: Get data')
 if Debug: print('DEBUG: Get list of input CSV files')
@@ -93,8 +112,9 @@ if config.InputDataType == 'Example':
   labels     = ['y']
   InputFiles = ['TestData.csv']
 elif config.InputDataType == 'Real':
-  Layers     = [0,1,2,3,12]
-  if 'pions' in config.Particle or config.Particle == 'all': Layers += [13,14]
+  #Layers     = [0,1,2,3,12]
+  #if 'pions' in config.Particle or config.Particle == 'all': Layers += [13,14]
+  Layers = get_layers(Config.Particle)
   header     = ['e_{}'.format(x) for x in Layers]
   header    += ['ef_{}'.format(x) for x in Layers]
   features   = ['ef_{}'.format(x) for x in Layers]

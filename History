@@ -30,6 +30,20 @@ v21: Training pions using set of parameters which give better performance for ph
 
 v22: Training electrons and photons using set of parameters which give better performance for photons in eta_20_25
 
+v23: photons trained with optimal choice for photons in eta20_25
+
+v24: electrons trained with optimal choice for electrons in eta20_25
+
+v25: pions trained with optimal choice for pions in eta20_25
+
+v26: electrons and photons with optimal choice for electrons and photons in eta20_25
+
+v27: pions and electrons with optimal choice for pions and electrons in eta20_25
+
+v28: pions trained with same hyperparameters as v27
+
+v29: all particles trained with hyperparameter set found with v9 opt
+
 ###################################
 # Hyperparameter optimization
 ###################################
@@ -37,4 +51,10 @@ v22: Training electrons and photons using set of parameters which give better pe
 v4: sending missing jobs from v3 and assigning correctly each job to corresponding set of parameters
 v5: same as v4 but for electrons
 v6: same as v4 but for pions
-
+v7: electronsANDphotons
+v8: pionsANDelectrons
+v9: photonsANDelectronsANDpions
+v10: photons eta_20_25 (new CSV files using full detector)
+v11: photons eta_140_145 (new CSV files using full detector)
+v12: photons eta_250_255 (new CSV files using full detector)
+v13: photons eta_400_405 (new CSV files using full detector)

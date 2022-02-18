@@ -3,9 +3,12 @@ Versions = { # version : particle
   'v4' : 'photons',
   'v5' : 'electrons',
   'v6' : 'pions',
+  'v7' : 'electronsANDphotons',
+  'v8' : 'pionsANDelectrons',
+  'v9' : 'all',
 }
 
-version = 'v5'
+version = 'v9'
 
 basePATH = '/afs/cern.ch/user/j/jbossios/work/public/FastCaloSim/Keras_Multipurpose_Regression/RegressionWithKeras/Logs/'
 
@@ -19,7 +22,7 @@ Version = 'HyperparameterOptimization_{}'.format(version)
 
 import os,sys
 
-OutputPATH = 'Plots/{}/'.format(version)
+OutputPATH = 'NewPlots/{}/'.format(version)
 if not os.path.exists(OutputPATH):
   os.makedirs(OutputPATH)
 
@@ -33,10 +36,11 @@ for File in os.listdir(basePATH+Version):
   # identify hyperparameter combination number
   Iter = int(File.split('.')[0].replace('{}_20_25_'.format(Particle),''))
   # Read test_loss
-  iFile            = open(basePATH+Version+'/'+File,'r')
-  Lines            = iFile.readlines()
-  if version == 'v5' and Iter == 896: continue # skip job that crashes (loss is too large anyway for this combination) Temporary
-  test_loss        = float(Lines[len(Lines)-3].split(',')[0].replace('[',''))
+  iFile = open(basePATH+Version+'/'+File,'r')
+  Lines = iFile.readlines()
+  if version == 'v5' and Iter == 896: continue # skip job that crashes (loss is too large anyway for this combination)
+  print('Iter = {}'.format(Iter))
+  test_loss = float(Lines[len(Lines)-3].split(',')[0].replace('[',''))
   TestLosses[Iter] = test_loss
   # Read val_loss
   for line in Lines:
@@ -74,7 +78,7 @@ for iActType in range(0,len(Params['ActivationType'])):
           print('Nlayers        = {}'.format(OptimalNlayers))
           break
 
-# Forcing optional n nodes to 40 for v5
+# Forcing optional n nodes to 80 for v5
 if version == 'v5':
   OptimalNnodes = 80
 
