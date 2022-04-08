@@ -6,13 +6,13 @@
 #                                                           #
 #############################################################
 
-Particle              = 'all'
+Particle              = 'photons'
 ActivationType        = 'relu' # Options: relu, tanh, linear, LeakyRelu
 Nepochs               = 200
 Nlayers               = 2
 NnodesHiddenLayers    = 100
-LearningRate          = 0.001
-Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
+LearningRate          = 0.0001
+Loss                  = 'weighted_mean_squared_error'  # Options: weighted_mean_squared_error, mean_absolute_error (MAE) and mean_squared_error (MSE)
 UseBatchNormalization = False
 UseNormalizer         = False
 UseEarlyStopping      = True

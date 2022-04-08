@@ -5,8 +5,8 @@
 #                                                  #
 ####################################################
 
-Version  = 'v24'
-Particle = 'electrons'
+Version  = 'v31'
+Particle = 'photons'
 Test     = True
 BasePATH = "/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Condor_Outputs/" # output path
 
@@ -14,10 +14,7 @@ BasePATH = "/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Co
 ## DO NOT MODIFY
 ######################################################################
 
-if 'photons' in Particle or 'electrons' in Particle or Particle == 'all':
-  EtaBins  = ['{}_{}'.format(x*5,x*5+5) for x in range(26)]
-elif Particle == 'pions':
-  EtaBins  = ['{}_{}'.format(x*5,x*5+5) for x in range(16)]
+EtaBins  = ['{}_{}'.format(x*5,x*5+5) for x in range(100)] # full detector
 
 PATH = BasePATH + Version + '/'
 
@@ -33,8 +30,8 @@ for File in AllFiles:
   if ".h5" in File:
     ROOTfiles.append(File)
 
-counter      = 0
-path         = "SubmissionScripts/"
+counter = 0
+path    = "SubmissionScripts/"
 for EtaBin in EtaBins:
   for File in os.listdir(path): # Loop over submission scripts files
     if ".sub" not in File:
