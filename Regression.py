@@ -22,7 +22,7 @@ parser.add_argument('--outPATH',               action='store',      dest="outPAT
 parser.add_argument('--activation',            action='store',      dest="activationType"    , default='relu', help='Layer activation type (default="relu", options: {})'.format([x for x in AllowedActivationTypes]))
 parser.add_argument('--nEpochs',               action='store',      dest="nEpochs"           , default=200,    help='Number of epochs (default=200)')
 parser.add_argument('--learningRate',          action='store',      dest="learningRate"      , default=0.001,  help='Learning rate (default=0.001)')
-parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss (default="MSE", options: "MSE" [mean_squared_error] or "MAE" [mean_absolute_error])')
+parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss (default="MSE", options: "weighted_mean_squared_error", "MSE" [mean_squared_error] or "MAE" [mean_absolute_error])')
 parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer (default=100)')
 parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers (default=2)')
 parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization (default=False)')
@@ -112,9 +112,7 @@ if config.InputDataType == 'Example':
   labels     = ['y']
   InputFiles = ['TestData.csv']
 elif config.InputDataType == 'Real':
-  #Layers     = [0,1,2,3,12]
-  #if 'pions' in config.Particle or config.Particle == 'all': Layers += [13,14]
-  Layers = get_layers(Config.Particle)
+  Layers = get_layers(config.Particle, 'eta_{}'.format(config.EtaRange))
   header     = ['e_{}'.format(x) for x in Layers]
   header    += ['ef_{}'.format(x) for x in Layers]
   features   = ['ef_{}'.format(x) for x in Layers]
@@ -174,6 +172,7 @@ test_dataset  = dataset.drop(train_dataset.index)
 
 # Import tensorflow and numpy
 import tensorflow as tf
+import keras.backend as K
 import numpy as np
 # Set seeds to get reproducible results
 np.random.seed(1)
@@ -223,9 +222,23 @@ tf.keras.utils.plot_model(model, to_file='{}/model_{}_{}.png'.format(config.outP
 #  print(f'layer name: {layer.name}')
 #  print(layer.get_weights())
 
+# Calculate a weight for each label
+etotal = train_dataset[[x for x in header if 'e_' in x]].copy()
+etotal['etotal'] = etotal.sum(axis=1)
+weights = [train_dataset[x.replace('extrapWeight_', 'e_')].mean()/etotal['etotal'].mean() for x in labels]
+print(f'weights = {weights}')
+
+# Define custom loss
+def weighted_mean_squared_error(y_true, y_pred):
+  return K.mean(K.square(y_true-y_pred)*weights)
+
 # Compile model
 print('INFO: Compile model')
-Loss = 'mean_absolute_error' if config.Loss == 'MAE' else 'mean_squared_error'
+Loss = 'mean_squared_error'
+if config.Loss == 'MAE':
+  Loss = 'mean_absolute_error'
+else:
+  Loss = weighted_mean_squared_error
 model.compile(
     optimizer=tf.optimizers.Adam(learning_rate=config.LearningRate),
     loss=Loss,
@@ -255,6 +268,7 @@ if len(Callbacks) > 0:
     #batch_size=132,        # left in case of need
     #steps_per_epoch=1,     # left in case of need
     #sample_weight=weights, # Optional Numpy array of weights for the training samples, used for weighting the loss function (during training only)
+    #class_weight=class_weights, # left in case of need
     verbose=1,
     validation_split = 0.4,
     callbacks=Callbacks)
@@ -279,10 +293,15 @@ if not config.UseModelCheckPoint:
 
 # Load the best model
 if config.UseModelCheckPoint:
+  custom_objects_dict = {}
+  if config.Loss == 'weighted_mean_squared_error':
+    custom_objects_dict['weighted_mean_squared_error'] = weighted_mean_squared_error
   if config.UseNormalizer:
-    model = tf.keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange),custom_objects={'Normalization': preprocessing.Normalization})
-  else:
+    custom_objects_dict['Normalization'] = preprocessing.Normalization
+  if not custom_objects_dict: # dict is empty
     model = tf.keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange))
+  else:
+    model = tf.keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange), custom_objects=custom_objects_dict)
 
 # Compare true vs prediction
 Features_dataset = dataset[features].copy().values.reshape(-1,Nfeatures)
@@ -305,7 +324,7 @@ print(model.metrics_names)
 print(test_results)
 
 # Print epoch at which the training stopped
-if config.UseEarlyStopping:
+if config.UseEarlyStopping and ES.stopped_epoch:
   print(f'Trainning stopped at epoch = {ES.stopped_epoch}')
 
 print('>>> ALL DONE <<<')
