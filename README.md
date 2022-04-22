@@ -98,6 +98,8 @@ And submit condor jobs with *Submit_Optimization.py*
 
 Example script for making plots to find optimal hyperparameters: *HyperparameterOptimization/FindOptimal.py*
 
+If the above script crashes, it is likely due to duplicated outputs (removed outputs from failed condor jobs and keep successful retry).
+
 ## Compare predicted-true extrapolation weight distribution b/w trained network and FCS (optional)
 
 ```

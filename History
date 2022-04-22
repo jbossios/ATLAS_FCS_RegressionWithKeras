@@ -44,6 +44,14 @@ v28: pions trained with same hyperparameters as v27
 
 v29: all particles trained with hyperparameter set found with v9 opt
 
+v30: photons using v8 inputs (full detector but missing files)
+
+v31: photons using v9 inputs (full detector + all files). Moved to 300 epochs. Using baseline hyperparameters for all eta bins.
+
+v32: photons using v9 inputs (full detector + all files). Moved to 300 epochs. Using baseline hyperparameters for all eta bins and new loss definition.
+
+v33: photons using full_detector inputs. Moved to 300 epochs. Using baseline hyperparameters for all eta bins and new loss definition.
+
 ###################################
 # Hyperparameter optimization
 ###################################
@@ -58,3 +66,25 @@ v10: photons eta_20_25 (new CSV files using full detector)
 v11: photons eta_140_145 (new CSV files using full detector)
 v12: photons eta_250_255 (new CSV files using full detector)
 v13: photons eta_400_405 (new CSV files using full detector)
+v14: photons eta_150_155 (new CSV files using full detector)
+v15: photons eta_330_335 (new CSV files using full detector)
+v16: photons eta_350_355 (new CSV files using full detector)
+v17 (using v4): photons eta_150_155 (new CSV files using full detector)
+v18 (using v4): photons eta_250_255 (new CSV files using full detector)
+v19 (using v4): photons eta_330_335 (new CSV files using full detector)
+v20 (using v4): photons eta_20_25 (new loss def: weighted_mean_squared_error)
+v21 (using v4): photons eta_140_145 (new loss def: weighted_mean_squared_error)
+v22 (using v4): photons eta_150_155 (new loss def: weighted_mean_squared_error)
+v23 (using v4): photons eta_250_255 (new loss def: weighted_mean_squared_error)
+v24 (using v4): photons eta_330_335 (new loss def: weighted_mean_squared_error)
+v25 (using v4): photons eta_350_355 (new loss def: weighted_mean_squared_error)
+v26 (using v4): photons eta_400_405 (new loss def: weighted_mean_squared_error)
+v27 (using v4): pions eta_20_25 (new loss def: weighted_mean_squared_error)
+v28 (using v4): pions eta_140_145 (new loss def: weighted_mean_squared_error)
+v29 (using v4): pions eta_150_155 (new loss def: weighted_mean_squared_error)
+v30 (using v4): pions eta_250_255 (new loss def: weighted_mean_squared_error)
+v31 (using v4): pions eta_330_335 (new loss def: weighted_mean_squared_error)
+v32 (using v4): pions eta_350_355 (new loss def: weighted_mean_squared_error)
+v33 (using v4): pions eta_400_405 (new loss def: weighted_mean_squared_error)
+
+

@@ -8,7 +8,7 @@
 
 Particle              = 'photons'
 ActivationType        = 'relu' # Options: relu, tanh, linear, LeakyRelu
-Nepochs               = 200
+Nepochs               = 2
 Nlayers               = 2
 NnodesHiddenLayers    = 100
 LearningRate          = 0.0001
@@ -39,6 +39,7 @@ command += " --nLayers "+str(Nlayers)
 command += " --learningRate "+str(LearningRate)
 command += " --loss "+Loss
 command += " --nNodes "+str(NnodesHiddenLayers)
+command += " --verbose 1"
 if UseBatchNormalization: command += " --useBatchNormalization"
 if UseNormalizer:         command += " --useNormalizationLayer"
 if UseEarlyStopping:      command += " --useEarlyStopping"

@@ -1,14 +1,43 @@
 
 Versions = { # version : particle
-  'v4' : 'photons',
-  'v5' : 'electrons',
-  'v6' : 'pions',
-  'v7' : 'electronsANDphotons',
-  'v8' : 'pionsANDelectrons',
-  'v9' : 'all',
+  'v4' : {'particles': 'photons', 'eta': '20_25'},
+  'v5' : {'particles': 'electrons', 'eta': '20_25'},
+  'v6' : {'particles': 'pions', 'eta': '20_25'},
+  'v7' : {'particles': 'electronsANDphotons', 'eta': '20_25'},
+  'v8' : {'particles': 'pionsANDelectrons', 'eta': '20_25'},
+  'v9' : {'particles': 'all', 'eta': '20_25'},
+  'v10' : {'particles': 'photons', 'eta': '20_25'},
+  'v11' : {'particles': 'photons', 'eta': '140_145'},
+  'v12' : {'particles': 'photons', 'eta': '250_255'},
+  'v13' : {'particles': 'photons', 'eta': '400_405'},
+  'v14' : {'particles': 'photons', 'eta': '150_155'},
+  'v15' : {'particles': 'photons', 'eta': '330_335'},
+  'v16' : {'particles': 'photons', 'eta': '350_355'},
+  'v17' : {'particles': 'photons', 'eta': '150_155'},
+  'v18' : {'particles': 'photons', 'eta': '250_255'},
+  'v19' : {'particles': 'photons', 'eta': '330_335'},
+  'v20' : {'particles': 'photons', 'eta': '20_25'},
+  'v21' : {'particles': 'photons', 'eta': '140_145'},
+  'v22' : {'particles': 'photons', 'eta': '150_155'},
+  'v23' : {'particles': 'photons', 'eta': '250_255'},
+  'v24' : {'particles': 'photons', 'eta': '330_335'},
+  'v25' : {'particles': 'photons', 'eta': '350_355'},
+  'v26' : {'particles': 'photons', 'eta': '400_405'},
+  'v27' : {'particles': 'pions', 'eta': '20_25'},
+  'v28' : {'particles': 'pions', 'eta': '140_145'},
+  'v29' : {'particles': 'pions', 'eta': '150_155'},
+  'v30' : {'particles': 'pions', 'eta': '250_255'},
+  'v31' : {'particles': 'pions', 'eta': '330_335'},
+  'v32' : {'particles': 'pions', 'eta': '350_355'},
+  'v33' : {'particles': 'pions', 'eta': '400_405'},
 }
 
-version = 'v9'
+version = 'v33'
+
+Debug = True
+
+# Compare loss value of optimal choice w.r.t the following baseline
+Baseline = {'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2}
 
 basePATH = '/afs/cern.ch/user/j/jbossios/work/public/FastCaloSim/Keras_Multipurpose_Regression/RegressionWithKeras/Logs/'
 
@@ -16,13 +45,15 @@ basePATH = '/afs/cern.ch/user/j/jbossios/work/public/FastCaloSim/Keras_Multipurp
 # DO NOT MODIFY (below this line)
 ########################################################################
 
-Particle = Versions[version]
+Particle = Versions[version]['particles']
+Eta = Versions[version]['eta']
 
 Version = 'HyperparameterOptimization_{}'.format(version)
 
-import os,sys
+import os
+import sys
 
-OutputPATH = 'NewPlots/{}/'.format(version)
+OutputPATH = 'NewPlots/{}/{}_{}/'.format(version, Particle, Eta)
 if not os.path.exists(OutputPATH):
   os.makedirs(OutputPATH)
 
@@ -34,24 +65,54 @@ ValLosses   = dict()
 for File in os.listdir(basePATH+Version):
   if '.out' not in File: continue # skip non-log files
   # identify hyperparameter combination number
-  Iter = int(File.split('.')[0].replace('{}_20_25_'.format(Particle),''))
+  Iter = int(File.split('.')[0].replace('{}_{}_'.format(Particle, Eta), ''))
   # Read test_loss
   iFile = open(basePATH+Version+'/'+File,'r')
   Lines = iFile.readlines()
   if version == 'v5' and Iter == 896: continue # skip job that crashes (loss is too large anyway for this combination)
-  print('Iter = {}'.format(Iter))
-  test_loss = float(Lines[len(Lines)-3].split(',')[0].replace('[',''))
-  TestLosses[Iter] = test_loss
-  # Read val_loss
+  if version == 'v10' and Iter == 672: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 640: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 636: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 660: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 668: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 656: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 672: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 664: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 888: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 896: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 892: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v12' and Iter == 880: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v13' and Iter == 672: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v13' and Iter == 668: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v13' and Iter == 896: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v15' and Iter == 672: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v15' and Iter == 668: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v15' and Iter == 664: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v15' and Iter == 896: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v16' and Iter == 668: continue # skip job that crashes (loss is too large anyway for this combination)
+  if version == 'v16' and Iter == 672: continue # skip job that crashes (loss is too large anyway for this combination)
+  if Debug: print('Iter = {}'.format(Iter))
+  # Find out if training was stopped due to early stopping
+  training_stopped = False
   for line in Lines:
-    if 'val_loss did not improve from' in line:
-      val_loss        = float(line.split('from ')[1])
-      ValLosses[Iter] = val_loss
+    if 'Training' in line:
+      training_stopped = True
+  # Get test_loss
+  if training_stopped:
+    TestLosses[Iter] = float(Lines[len(Lines)-3].split(',')[0].replace('[',''))
+  else:
+    TestLosses[Iter] = float(Lines[len(Lines)-2].split(',')[0].replace('[',''))
   # Find combination with lowest test_loss
-  if test_loss < MinLoss:
-    MinLoss     = test_loss
+  if TestLosses[Iter] < MinLoss:
+    MinLoss     = TestLosses[Iter]
     OptimalComb = Iter
+  # Read val_loss
+  if training_stopped:
+    ValLosses[Iter] = float(Lines[len(Lines)-6].split(',')[0].replace('[',''))
+  else:
+    ValLosses[Iter] = float(Lines[len(Lines)-5].split(',')[0].replace('[',''))
 
+print('############################################################')
 print('Optimal choices with a test_loss of {} for combination #{}:'.format(MinLoss,OptimalComb))
 
 # Display parameters for the optimal combination
@@ -67,6 +128,10 @@ for iActType in range(0,len(Params['ActivationType'])):
       # Loop over number of layers
       for iLayers in range(0,len(Params['Nlayers'])):
         counter += 1
+        # Find baseline choice
+        if Params['ActivationType'][iActType] == Baseline['ActivationType'] and Params['LearningRate'][iLearningRate] == Baseline['LearningRate'] and Params['Nnodes'][iNodes] == Baseline['Nnodes'] and Params['Nlayers'][iLayers] == Baseline['Nlayers']:
+          BaselineLoss = TestLosses[counter]
+	# Find optimal choice
         if counter == OptimalComb:
           OptimalActivationType = Params['ActivationType'][iActType]
           OptimalLearningRate   = Params['LearningRate'][iLearningRate]
@@ -76,7 +141,12 @@ for iActType in range(0,len(Params['ActivationType'])):
           print('LearningRate   = {}'.format(OptimalLearningRate))
           print('Nnodes         = {}'.format(OptimalNnodes))
           print('Nlayers        = {}'.format(OptimalNlayers))
-          break
+          #break
+print('############################################################')
+
+# Compare losses b/w baseline and optimal choices
+print('MinLoss = {}'.format(MinLoss))
+print('BaselineLoss = {}'.format(BaselineLoss))
 
 # Forcing optional n nodes to 80 for v5
 if version == 'v5':
@@ -105,7 +175,7 @@ for iActType in range(0,len(Params['ActivationType'])):
         if ActivationType==OptimalActivationType and Nnodes==OptimalNnodes and Nlayers==OptimalNlayers:
           CombinationsOfInterest['{}_{}_{}'.format(OptimalActivationType,OptimalNnodes,OptimalNlayers)][LearningRate] = counter
 
-# Plot loss vs learning rate for optimal ActivationType,Nnodes,Nlayers
+# Compare test vs val loss for optimal choice (not possible anymore since I'm running now with verbose=0)
 Combination = '{}_{}_{}'.format(OptimalActivationType,OptimalNnodes,OptimalNlayers)
 x = [key for key in CombinationsOfInterest[Combination]]
 x.sort()
