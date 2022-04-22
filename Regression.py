@@ -241,7 +241,7 @@ print('INFO: Compile model')
 Loss = 'mean_squared_error'
 if config.Loss == 'MAE':
   Loss = 'mean_absolute_error'
-elif config.Loss = 'MSE':
+elif config.Loss == 'MSE':
   Loss = 'mean_squared_error'
 else:
   Loss = weighted_mean_squared_error
