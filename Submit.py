@@ -5,7 +5,7 @@
 #                                                  #
 ####################################################
 
-Version  = 'v31'
+Version  = 'v32'
 Particle = 'photons'
 Test     = True
 BasePATH = "/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Condor_Outputs/" # output path

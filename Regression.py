@@ -25,6 +25,7 @@ parser.add_argument('--learningRate',          action='store',      dest="learni
 parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss (default="MSE", options: "weighted_mean_squared_error", "MSE" [mean_squared_error] or "MAE" [mean_absolute_error])')
 parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer (default=100)')
 parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers (default=2)')
+parser.add_argument('--verbose',               action='store',      dest="verbose"           , default=1,      help='Set fit verbosity (default=1)')
 parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization (default=False)')
 parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False,  help='Use preprocessing.Normalization layer (default=False)')
 parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False,  help='Use EarlyStopping (default=False)')
@@ -47,9 +48,10 @@ UseModelCheckPoint    = args.useModelCheckpoint
 NnodesHiddenLayers    = int(args.nNodes)
 NhiddenLayers         = int(args.nLayers)
 Debug                 = args.debug
+Verbose               = int(args.verbose)
 
 class Config:
-  def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm,loss,Nnodes,Nlayers,particle,eta,outPATH):
+  def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm,loss,Nnodes,Nlayers,particle,eta,outPATH,verbose):
     self.InputDataType         = datatype
     self.ActivationType        = activation
     self.Nepochs               = epochs
@@ -64,9 +66,10 @@ class Config:
     self.Particle              = particle
     self.EtaRange              = eta
     self.outPATH               = outPATH
+    self.verbose               = verbose
 
 # Print chosen setup
-config = Config(InputDataType,ActivationType,Nepochs,LearningRate,UseEarlyStopping,UseNormalizer,UseModelCheckPoint,UseBatchNormalization,Loss,NnodesHiddenLayers,NhiddenLayers,ParticleType,EtaRange,OutputPATH)
+config = Config(InputDataType,ActivationType,Nepochs,LearningRate,UseEarlyStopping,UseNormalizer,UseModelCheckPoint,UseBatchNormalization,Loss,NnodesHiddenLayers,NhiddenLayers,ParticleType,EtaRange,OutputPATH,Verbose)
 print('###################################################################################')
 print('INFO: Setup:')
 print(vars(config))
@@ -113,6 +116,7 @@ if config.InputDataType == 'Example':
   InputFiles = ['TestData.csv']
 elif config.InputDataType == 'Real':
   Layers = get_layers(config.Particle, 'eta_{}'.format(config.EtaRange))
+  print('INFO: Calorimeter layers: {}'.format(Layers))
   header     = ['e_{}'.format(x) for x in Layers]
   header    += ['ef_{}'.format(x) for x in Layers]
   features   = ['ef_{}'.format(x) for x in Layers]
@@ -237,6 +241,8 @@ print('INFO: Compile model')
 Loss = 'mean_squared_error'
 if config.Loss == 'MAE':
   Loss = 'mean_absolute_error'
+elif config.Loss = 'MSE':
+  Loss = 'mean_squared_error'
 else:
   Loss = weighted_mean_squared_error
 model.compile(
@@ -253,7 +259,7 @@ if config.UseEarlyStopping:
 
 # ModelCheckPoint
 if config.UseModelCheckPoint:
-  MC = tf.keras.callbacks.ModelCheckpoint('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange), monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+  MC = tf.keras.callbacks.ModelCheckpoint('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange), monitor='val_loss', mode='min', verbose=config.verbose, save_best_only=True)
   Callbacks.append(MC)
 
 # Terminate on NaN such that it is easier to debug
@@ -269,14 +275,14 @@ if len(Callbacks) > 0:
     #steps_per_epoch=1,     # left in case of need
     #sample_weight=weights, # Optional Numpy array of weights for the training samples, used for weighting the loss function (during training only)
     #class_weight=class_weights, # left in case of need
-    verbose=1,
+    verbose=config.verbose,
     validation_split = 0.4,
     callbacks=Callbacks)
 else:
   history = model.fit(
     train_features, train_labels,
     epochs=config.Nepochs,
-    verbose=1,
+    verbose=config.verbose,
     validation_split = 0.4)
 
 # Plot loss vs epochs
@@ -318,13 +324,17 @@ for Label in labels:
   counter += 1
 
 # Evaluate
-print('INFO: Evaluate')
-test_results = model.evaluate(test_features, test_labels, verbose=0)
+print('INFO: Evaluate on training data')
+train_results = model.evaluate(train_features, train_labels, verbose=config.verbose)
+print(model.metrics_names)
+print(train_results)
+print('INFO: Evaluate on test data')
+test_results = model.evaluate(test_features, test_labels, verbose=config.verbose)
 print(model.metrics_names)
 print(test_results)
 
 # Print epoch at which the training stopped
 if config.UseEarlyStopping and ES.stopped_epoch:
-  print(f'Trainning stopped at epoch = {ES.stopped_epoch}')
+  print(f'Training stopped at epoch = {ES.stopped_epoch}')
 
 print('>>> ALL DONE <<<')

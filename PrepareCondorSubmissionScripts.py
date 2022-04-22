@@ -20,10 +20,14 @@ Versions = {
 #  'v26' : {'Particle' : 'electronsANDphotons', 'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 30, 'Nlayers' : 2},
 #  'v27' : {'Particle' : 'pionsANDelectrons',   'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 40, 'Nlayers' : 3},
 #  'v28' : {'Particle' : 'pions',   'ActivationType' : 'relu', 'LearningRate' : 0.0005, 'Nnodes' : 40, 'Nlayers' : 3},
-  'v29' : {'Particle' : 'all',   'ActivationType' : 'relu', 'LearningRate' : 0.0001, 'Nnodes' : 100, 'Nlayers' : 2},
+#  'v29' : {'Particle' : 'all',   'ActivationType' : 'relu', 'LearningRate' : 0.0001, 'Nnodes' : 100, 'Nlayers' : 2},
+#  'v30' : {'Particle' : 'photons',   'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2},
+#  'v31' : {'Particle' : 'photons',   'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2},
+  'v32' : {'Particle' : 'photons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2},
+  'v33' : {'Particle' : 'pions',   'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2},
 }
-Nepochs               = 200
-Loss                  = 'MSE'  # Options: mean_absolute_error (MAE) and mean_squared_error (MSE)
+Nepochs               = 300
+Loss                  = 'weighted_mean_squared_error'  # Options: weighted_mean_squared_error, mean_absolute_error (MAE) and mean_squared_error (MSE)
 UseBatchNormalization = False
 UseNormalizer         = False
 UseEarlyStopping      = True

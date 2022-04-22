@@ -15,9 +15,15 @@
 #  'LearningRate'   : [0.0001,0.0005,0.001,0.005,0.01,0.05,0.1],
 #  'Nnodes'         : [20,30,40,80,100,120,150,200],
 #}
-HyperParameters = { # v3
-  'ActivationType' : ['relu','tanh','linear','LeakyRelu'],
-  'LearningRate'   : [0.0001,0.0005,0.001,0.005,0.01,0.05,0.1],
+#HyperParameters = { # v3
+#  'ActivationType' : ['relu','tanh','linear','LeakyRelu'],
+#  'LearningRate'   : [0.0001,0.0005,0.001,0.005,0.01,0.05,0.1],
+#  'Nnodes'         : [20,30,40,80,100,120,150,200],
+#  'Nlayers'        : [1,2,3,4],
+#}
+HyperParameters = { # v4
+  'ActivationType' : ['relu','tanh','LeakyRelu'],
+  'LearningRate'   : [0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05],
   'Nnodes'         : [20,30,40,80,100,120,150,200],
   'Nlayers'        : [1,2,3,4],
 }

@@ -5,8 +5,8 @@
 #                                                  #
 ####################################################
 
-Version  = 'HyperparameterOptimization_v13'
-Particle = 'photons'
+Version  = 'HyperparameterOptimization_v33'
+Particle = 'pions'
 Test     = False
 BasePATH = "/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/Regression_Condor_Outputs/" # output path
 EtaBin   = '400_405'

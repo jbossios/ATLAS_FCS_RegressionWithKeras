@@ -8,5 +8,6 @@ PATH2InputFiles = { # collect the paths where all files are available for each t
 # First (incomplete) versions for full detector
 #  'photons'             : '/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/MicheleInputsCSV/photons/v8/',
 # Complete versions for full detector
-  'photons'             : '/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/MicheleInputsCSV/photons/v9/',
+  'photons' : '/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/MicheleInputsCSV/photons/v9/',
+  'pions' : '/eos/atlas/atlascerngroupdisk/proj-simul/AF3_Run3/Jona/MicheleInputsCSV/pions/full_detector/',
 }
