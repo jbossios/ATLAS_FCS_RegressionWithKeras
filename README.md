@@ -1,11 +1,11 @@
 
 # Purpose
 
-Train a DNN to learn how to predict the extrapolation weight for any layer/particle/eta range.
+Train a DNN to learn to predict the extrapolation weight (longitudinal hit position) for any calorimter layer, particle on any eta range.
 
 # How to clone?
 
-git clone git@github.com:jbossios/RegressionWithKeras.git
+git clone git@github.com:jbossios/ATLAS_FCS_RegressionWithKeras.git
 
 # Dependencies
 
@@ -19,9 +19,8 @@ git clone git@github.com:jbossios/RegressionWithKeras.git
 
 **Regression.py**:
 
-- Run with --help to get all options
 - Import input data (CSV files) using pandas
-- Split data into train and test (training data = 0.8 data)
+- Split data into train and test (training data = 0.8 x data)
   - Validation split = 0.4
 - Use Sequential API from keras to create model to train
   - Seeds are set to get reproducible results (np.random.seed(1) and tf.random.set_seed(1))
@@ -31,11 +30,12 @@ git clone git@github.com:jbossios/RegressionWithKeras.git
 - Outputs:
   - One model (h5 file) for each eta range \[Real\_{ACTIVATIONTYPE}\_{PARTICLES}\_{ETARANGE}_best_model.h5\]
   - Loss vs epochs (PDF) for each eta range \[Real\_{ACTIVATIONTYPE}\_{PARTICLES}\_{ETARANGE}_loss_vs_epochs.pdf\]
+- Run with ```--help``` to get all options
 
 **InputFiles.py**:
 - Define the path for each combination of particles that want to be used during training in the *PATH2InputFiles* dict
 
-**Note**: Input CSV files should be created using *MakeCSVfiles_NN.py* from [PrepareCSVFiles](https://github.com/jbossios/PrepareCSVFiles)
+**Note**: Input CSV files should be created using *MakeCSVfiles_NN.py* from [ATLAS_FCS_PrepareCSVFiles](https://github.com/jbossios/ATLAS_FCS_PrepareCSVFiles)
 
 # How to run?
 
@@ -79,7 +79,7 @@ This will produce one submission script per eta bin for each version which will 
 Submit condor jobs for a given version (Versions+Particle) with *Submit.py*:
 - **Before submitting, choose where outputs will be located with BasePATH.**
   - This will be used to check if outputs are already available, this is helpful to resend jobs for only those which were not successful
-- Set Test to True to check how many jobs need to be sent (no job will actually be sent)
+- Set ```Test``` to ```True``` to check how many jobs need to be sent (no job will actually be sent)
 - Logs will be written in *Logs/{Version}/*
 - Follow jobs with ```condor_q```
   - Condor tips:
@@ -98,7 +98,7 @@ And submit condor jobs with *Submit_Optimization.py*
 
 Example script for making plots to find optimal hyperparameters: *HyperparameterOptimization/FindOptimal.py*
 
-If the above script crashes, it is likely due to duplicated outputs (removed outputs from failed condor jobs and keep successful retry).
+If the above script crashes, it is likely due to duplicated outputs (remove outputs from failed condor jobs and keep successful retry).
 
 ## Compare predicted-true extrapolation weight distribution b/w trained network and FCS (optional)
 
@@ -106,7 +106,7 @@ If the above script crashes, it is likely due to duplicated outputs (removed out
 cd Plotter/
 ```
 
-**First:** Produce CSV files with firstPCAbin values with *MakeCSVfiles_FCS.py* script from [PrepareCSVFiles](https://github.com/jbossios/PrepareCSVFiles). This is needed to obtain the current extrapolation weights and compare with those predicted by the network
+**First:** Produce CSV files with firstPCAbin values with *MakeCSVfiles_FCS.py* script from [ATLAS_FCS_PrepareCSVFiles](https://github.com/jbossios/ATLAS_FCS_PrepareCSVFiles). This is needed to obtain the current extrapolation weights and compare with those predicted by the network.
 
 Run Setup.sh:
 
