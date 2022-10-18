@@ -12,13 +12,14 @@ Versions = {
 #  'v24' : {'Particle': 'photons', 'etabin': '330_335'},
 #  'v25' : {'Particle': 'photons', 'etabin': '350_355'},
 #  'v26' : {'Particle': 'photons', 'etabin': '400_405'},
-  'v27' : {'Particle': 'pions', 'etabin': '20_25'},
-  'v28' : {'Particle': 'pions', 'etabin': '140_145'},
-  'v29' : {'Particle': 'pions', 'etabin': '150_155'},
-  'v30' : {'Particle': 'pions', 'etabin': '250_255'},
-  'v31' : {'Particle': 'pions', 'etabin': '330_335'},
-  'v32' : {'Particle': 'pions', 'etabin': '350_355'},
-  'v33' : {'Particle': 'pions', 'etabin': '400_405'},
+#  'v27' : {'Particle': 'pions', 'etabin': '20_25'},
+#  'v28' : {'Particle': 'pions', 'etabin': '140_145'},
+#  'v29' : {'Particle': 'pions', 'etabin': '150_155'},
+#  'v30' : {'Particle': 'pions', 'etabin': '250_255'},
+#  'v31' : {'Particle': 'pions', 'etabin': '330_335'},
+#  'v32' : {'Particle': 'pions', 'etabin': '350_355'},
+#  'v33' : {'Particle': 'pions', 'etabin': '400_405'},
+  'v34' : {'Particle': 'photons', 'etabin': '170_175'},
 }
 Loss                  = 'weighted_mean_squared_error'  # Options: weighted_mean_squared_error, mean_absolute_error (MAE) and mean_squared_error (MSE)
 Nepochs               = 300
@@ -98,6 +99,7 @@ for version, vdict in Versions.items():
           command += " --nNodes "+str(NnodesHiddenLayers)
           command += " --nLayers "+str(Nlayers)
           command += " --verbose 0"
+          command += " --hpo"
           if UseBatchNormalization: command += " --useBatchNormalization"
           if UseNormalizer:         command += " --useNormalizationLayer"
           if UseEarlyStopping:      command += " --useEarlyStopping"
