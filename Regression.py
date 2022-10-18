@@ -25,11 +25,12 @@ parser.add_argument('--learningRate',          action='store',      dest="learni
 parser.add_argument('--loss',                  action='store',      dest="loss"              , default='MSE',  help='Type of loss (default="MSE", options: "weighted_mean_squared_error", "MSE" [mean_squared_error] or "MAE" [mean_absolute_error])')
 parser.add_argument('--nNodes',                action='store',      dest="nNodes"            , default=100,    help='Number of nodes per hidden layer (default=100)')
 parser.add_argument('--nLayers',               action='store',      dest="nLayers"           , default=2,      help='Number of hidden layers (default=2)')
-parser.add_argument('--verbose',               action='store',      dest="verbose"           , default=1,      help='Set fit verbosity (default=1)')
+parser.add_argument('--verbose',               action='store',      dest="verbose"           , default=1,      help="Set fit's verbosity (default=1)")
 parser.add_argument('--useBatchNormalization', action='store_true', dest="useBatchNorm"      , default=False,  help='Use BatchNormalization (default=False)')
 parser.add_argument('--useNormalizationLayer', action='store_true', dest="useNormLayer"      , default=False,  help='Use preprocessing.Normalization layer (default=False)')
 parser.add_argument('--useEarlyStopping',      action='store_true', dest="useEarlyStopping"  , default=False,  help='Use EarlyStopping (default=False)')
 parser.add_argument('--useModelCheckpoint',    action='store_true', dest="useModelCheckpoint", default=False,  help='Use ModelCheckpoint (default=False)')
+parser.add_argument('--hpo',                   action='store_true', dest="hpo",                default=False,  help='Reduce number of outputs when doing a Hyper-parameter optimization (default=False)')
 parser.add_argument('--debug',                 action='store_true', dest="debug"             , default=False,  help='Run in debug mode (default=False)')
 args = parser.parse_args()
 
@@ -49,6 +50,7 @@ NnodesHiddenLayers    = int(args.nNodes)
 NhiddenLayers         = int(args.nLayers)
 Debug                 = args.debug
 Verbose               = int(args.verbose)
+hpo                   = args.hpo
 
 class Config:
   def __init__(self,datatype,activation,epochs,lr,earlyStop,useNormalizer,useMCP,useBatchNorm,loss,Nnodes,Nlayers,particle,eta,outPATH,verbose):
@@ -174,7 +176,7 @@ test_dataset  = dataset.drop(train_dataset.index)
 #plot = sns.pairplot(train_dataset, diag_kind='kde')
 #plot.savefig('{}/{}_{}_{}_Correlations.pdf'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange))
 
-# Import tensorflow and numpy
+# Import tensorflow and numpy (FIXME: should set seeds before I divide data into training/testing)
 import tensorflow as tf
 import keras.backend as K
 import numpy as np
@@ -286,10 +288,11 @@ else:
     validation_split = 0.4)
 
 # Plot loss vs epochs
-hist = pd.DataFrame(history.history)
-hist['epoch'] = history.epoch
-import HelperFunctions
-HelperFunctions.plot_loss(history,config.outPATH,OutBaseName+'_'+config.Particle+'_'+config.EtaRange,config.Loss)
+if not hpo:
+  hist = pd.DataFrame(history.history)
+  hist['epoch'] = history.epoch
+  import HelperFunctions
+  HelperFunctions.plot_loss(history,config.outPATH,OutBaseName+'_'+config.Particle+'_'+config.EtaRange,config.Loss)
 
 # Save the model
 if not config.UseModelCheckPoint:
@@ -310,18 +313,27 @@ if config.UseModelCheckPoint:
     model = tf.keras.models.load_model('{}/{}_{}_{}_best_model.h5'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange), custom_objects=custom_objects_dict)
 
 # Compare true vs prediction
-Features_dataset = dataset[features].copy().values.reshape(-1,Nfeatures)
-Labels_dataset   = dataset[labels].copy().values.reshape(-1,Nlabels)
-pred             = model.predict(Features_dataset)
-counter = 0
-import matplotlib.pyplot as plt
-for Label in labels:
-  plt.figure('true_vs_prediction_{}'.format(Label))
-  plt.hist(Labels_dataset[:,counter],label=Label+' true',bins=50)
-  plt.hist(pred[:,counter],label=Label+' prediction',bins=50,alpha=0.5)
-  plt.legend()
-  plt.savefig('{}/{}_{}_{}_true_vs_prediction_{}.pdf'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange,Label))
-  counter += 1
+if not hpo:
+  Features_dataset = dataset[features].copy().values.reshape(-1,Nfeatures)
+  Labels_dataset   = dataset[labels].copy().values.reshape(-1,Nlabels)
+  pred             = model.predict(Features_dataset)
+  counter = 0
+  import matplotlib.pyplot as plt
+  for Label in labels:
+    plt.figure('true_vs_prediction_{}'.format(Label))
+    plt.hist(Labels_dataset[:,counter],label=Label+' true',bins=50)
+    plt.hist(pred[:,counter],label=Label+' prediction',bins=50,alpha=0.5)
+    plt.legend()
+    plt.savefig('{}/{}_{}_{}_true_vs_prediction_{}.pdf'.format(config.outPATH,OutBaseName,config.Particle,config.EtaRange,Label))
+    counter += 1
+  # the same but in logy
+  for counter, Label in enumerate(labels):
+    plt.figure('true_vs_prediction_logy_{}'.format(Label))
+    plt.yscale('log')
+    plt.hist(Labels_dataset[:,counter], label=Label + ' true', bins=50)
+    plt.hist(pred[:,counter], label=Label + ' prediction', bins=50, alpha=0.5)
+    plt.legend()
+    plt.savefig('{}/{}_{}_{}_true_vs_prediction_logy_{}.pdf'.format(config.outPATH, OutBaseName, config.Particle, config.EtaRange, Label))
 
 # Evaluate
 print('INFO: Evaluate on training data')
