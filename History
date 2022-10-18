@@ -50,7 +50,7 @@ v31: photons using v9 inputs (full detector + all files). Moved to 300 epochs. U
 
 v32: photons using v9 inputs (full detector + all files). Moved to 300 epochs. Using baseline hyperparameters for all eta bins and new loss definition.
 
-v33: photons using full_detector inputs. Moved to 300 epochs. Using baseline hyperparameters for all eta bins and new loss definition.
+v33: pions using full_detector inputs. Moved to 300 epochs. Using baseline hyperparameters for all eta bins and new loss definition.
 
 ###################################
 # Hyperparameter optimization
