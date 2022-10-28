@@ -48,10 +48,12 @@ Versions = {
 #  'v51': {'Particle': 'photons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v0 inputs
 #  'v52': {'Particle': 'electrons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v0 inputs
 #  'v53': {'Particle': 'pions', 'ActivationType': 'relu', 'LearningRate': 0.0005, 'Nnodes': 40, 'Nlayers': 3, 'Loss': 'weighted_mean_squared_error'},  # using R22 v0 inputs
-  'v54': {'Particle': 'photons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
-  'v55': {'Particle': 'electrons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
-  'v56': {'Particle': 'pions', 'ActivationType': 'relu', 'LearningRate': 0.0005, 'Nnodes': 40, 'Nlayers': 3, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
-  'v57': {'Particle': 'electronsANDphotons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
+#  'v54': {'Particle': 'photons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
+#  'v55': {'Particle': 'electrons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
+#  'v56': {'Particle': 'pions', 'ActivationType': 'relu', 'LearningRate': 0.0005, 'Nnodes': 40, 'Nlayers': 3, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
+#  'v57': {'Particle': 'electronsANDphotons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
+  'v58': {'Particle': 'electronsANDphotons', 'ActivationType': 'relu', 'LearningRate': 0.0001, 'Nnodes': 30, 'Nlayers': 2, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
+  'v59': {'Particle': 'pions', 'ActivationType': 'relu', 'LearningRate': 0.0005, 'Nnodes': 40, 'Nlayers': 3, 'Loss': 'weighted_mean_squared_error'},  # using R22 v1 inputs
 }
 Nepochs               = 300
 UseBatchNormalization = False

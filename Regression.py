@@ -221,7 +221,7 @@ else: # LeakyRelu
   for ilayer in range(1,config.NhiddenLayers):
     model.add(tf.keras.layers.Dense(config.NnodesHiddenLayers))
     model.add(tf.keras.layers.LeakyReLU())
-model.add(tf.keras.layers.Dense(Nlabels))
+model.add(tf.keras.layers.Dense(Nlabels, activation='sigmoid'))
 model.summary()
 tf.keras.utils.plot_model(model, to_file='{}/model_{}_{}.png'.format(config.outPATH,config.Particle,config.EtaRange), show_shapes=True)
 #for layer in model.layers: # left in case of need
